@@ -46,6 +46,9 @@ for i in range(5):
         croquette_type = "normal"
     croquette_list.append({'x': x, 'y': y, 'spawn_time': spawn_time, 'type': croquette_type})
 
+# Création des réserves d'eau (objets à collecter pour augmenter l'eau)
+water_item_list = []
+
 # Génération d'un fond spatial procédural
 num_stars = 50
 star_list = []
@@ -88,6 +91,7 @@ bullet_height = 4
 # Initialiser le score, les vies et le font
 score = 0
 lives = 9
+water_ammo = 50
 pygame.font.init()
 score_font = pygame.font.SysFont(None, 36)
 
@@ -107,31 +111,33 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                current_time = pygame.time.get_ticks()
-                if current_time >= next_shot_allowed_time:
-                    # Déterminer la direction du tir à partir des touches fléchées
-                    keys = pygame.key.get_pressed()
-                    dx = 0
-                    dy = 0
-                    if keys[pygame.K_LEFT]:
-                        dx -= 1
-                    if keys[pygame.K_RIGHT]:
-                        dx += 1
-                    if keys[pygame.K_UP]:
-                        dy -= 1
-                    if keys[pygame.K_DOWN]:
-                        dy += 1
-                    if dx == 0 and dy == 0:
-                        dy = -1  # par défaut, tirer vers le haut
-                    mag = math.sqrt(dx*dx + dy*dy)
-                    dx = dx / mag * bullet_speed
-                    dy = dy / mag * bullet_speed
-                    # Positionner le tir au centre d'AstroPaws
-                    bullet_rect = pygame.Rect(astro_x + 25 - bullet_width//2, astro_y + 25 - bullet_height//2, bullet_width, bullet_height)
-                    bullet = {'rect': bullet_rect, 'dx': dx, 'dy': dy}
-                    bullet_list.append(bullet)
-                    next_shot_allowed_time = current_time + cooldown_time
+            
+         if event.key == pygame.K_SPACE:
+             current_time = pygame.time.get_ticks()
+             if current_time >= next_shot_allowed_time and water_ammo > 0:
+                 # Déterminer la direction du tir à partir des touches fléchées
+                 keys = pygame.key.get_pressed()
+                 dx = 0
+                 dy = 0
+                 if keys[pygame.K_LEFT]:
+                     dx -= 1
+                 if keys[pygame.K_RIGHT]:
+                     dx += 1
+                 if keys[pygame.K_UP]:
+                     dy -= 1
+                 if keys[pygame.K_DOWN]:
+                     dy += 1
+                 if dx == 0 and dy == 0:
+                     dy = -1  # par défaut, tirer vers le haut
+                 mag = math.sqrt(dx*dx + dy*dy)
+                 dx = dx / mag * bullet_speed
+                 dy = dy / mag * bullet_speed
+                 # Positionner le tir au centre d'AstroPaws
+                 bullet_rect = pygame.Rect(astro_x + 25 - bullet_width//2, astro_y + 25 - bullet_height//2, bullet_width, bullet_height)
+                 bullet = {'rect': bullet_rect, 'dx': dx, 'dy': dy}
+                 bullet_list.append(bullet)
+                 next_shot_allowed_time = current_time + cooldown_time
+                 water_ammo -= 1
 
     # Gestion continue des touches (pour détecter plusieurs touches en même temps)
     keys = pygame.key.get_pressed()
@@ -293,16 +299,23 @@ while running:
             new_croquette_list.append(croquette)
     croquette_list = new_croquette_list
 
-    # Apparition de nouvelles croquettes
-    if random.random() < 0.01:  # Environ 1% de chance par frame
-        x = random.randint(0, screen_width - croquette_size)
-        y = random.randint(0, screen_height - croquette_size)
+    # Mise à jour des réserves d'eau (water items)
+    current_time = pygame.time.get_ticks()
+    water_item_list = [item for item in water_item_list if current_time - item['spawn_time'] < 7000]  # durée de vie de 7 sec
+    
+    # Collision entre AstroPaws et les réserves d'eau
+    for item in water_item_list[:]:
+        water_rect = pygame.Rect(item['x'], item['y'], 10, 10)
+        if player_rect.colliderect(water_rect):
+            water_ammo += 10
+            water_item_list.remove(item)
+    
+    # Apparition de nouvelles réserves d'eau
+    if random.random() < 0.005:  # environ 0.5% de chance par frame
+        x = random.randint(0, screen_width - 10)
+        y = random.randint(0, screen_height - 10)
         spawn_time = pygame.time.get_ticks()
-        if random.random() < 0.1:
-            croquette_type = "rare"
-        else:
-            croquette_type = "normal"
-        croquette_list.append({'x': x, 'y': y, 'spawn_time': spawn_time, 'type': croquette_type})
+        water_item_list.append({'x': x, 'y': y, 'spawn_time': spawn_time})
 
     # Mise à jour des particules d'explosion
     new_explosion_list = []
@@ -329,6 +342,9 @@ while running:
         else:
             color = ORANGE
         pygame.draw.rect(screen, color, (croquette['x'], croquette['y'], croquette_size, croquette_size))
+    # Dessiner les réserves d'eau (objets d'acquisition d'eau)
+    for item in water_item_list:
+        pygame.draw.rect(screen, (0, 200, 255), (item['x'], item['y'], 10, 10))
     # Dessiner les ennemis
     for enemy in enemy_list:
         if enemy['type'] == "rat":
@@ -352,7 +368,12 @@ while running:
     screen.blit(score_surface, (10, 10))
     # Afficher les vies sous forme de cœurs en haut à droite
     for i in range(lives):
-        screen.blit(heart_sprite, (screen_width - (heart_sprite.get_width() + 10) * (i + 1), 10))
+         screen.blit(heart_sprite, (screen_width - (heart_sprite.get_width() + 10) * (i + 1), 10))
+    # Afficher le score, l'eau et les vies
+    score_surface = score_font.render("Score: " + str(score), True, WHITE)
+    screen.blit(score_surface, (10, 10))
+    water_surface = score_font.render("Water: " + str(water_ammo), True, WHITE)
+    screen.blit(water_surface, (10, 50))
 
     # Actualiser l'affichage
     pygame.display.flip()
