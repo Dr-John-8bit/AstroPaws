@@ -285,6 +285,17 @@ while running:
     current_time = pygame.time.get_ticks()
     croquette_list = [croquette for croquette in croquette_list if current_time - croquette['spawn_time'] < croquette_lifetime]
 
+    # Apparition de nouvelles croquettes
+    if random.random() < 0.01:  # environ 1% de chance par frame
+        x = random.randint(0, screen_width - croquette_size)
+        y = random.randint(0, screen_height - croquette_size)
+        spawn_time = pygame.time.get_ticks()
+        if random.random() < 0.1:
+            croquette_type = "rare"
+        else:
+            croquette_type = "normal"
+        croquette_list.append({'x': x, 'y': y, 'spawn_time': spawn_time, 'type': croquette_type})
+
     # Collision entre AstroPaws et les croquettes
     player_rect = pygame.Rect(astro_x, astro_y, 50, 50)
     new_croquette_list = []
