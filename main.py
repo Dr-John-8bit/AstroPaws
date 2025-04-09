@@ -24,8 +24,7 @@ YELLOW = (255, 255, 0)
 enemy_list = []
 explosion_list = []
 
-def create_explosion(x, y, color=YELLOW):
-    num_particles = 20
+def create_explosion(x, y, color=YELLOW, num_particles=20):
     for i in range(num_particles):
         angle = random.uniform(0, 2 * math.pi)
         speed = random.uniform(1, 3)
@@ -71,6 +70,10 @@ for i in range(num_planets):
 astro_sprite = pygame.image.load("images/astro_paws.png").convert_alpha()
 astro_sprite = pygame.transform.scale(astro_sprite, (80, 80))
 
+# Charger l'image du coeur pour les vies
+heart_sprite = pygame.image.load("images/heart.png").convert_alpha()
+heart_sprite = pygame.transform.scale(heart_sprite, (20, 20))
+
 # Position initiale d'AstroPaws
 astro_x = screen_width // 2
 astro_y = screen_height // 2
@@ -82,8 +85,9 @@ bullet_speed = 10
 bullet_width = 10
 bullet_height = 4
 
-# Initialiser le score et le font
-score = 50
+# Initialiser le score, les vies et le font
+score = 0
+lives = 9
 pygame.font.init()
 score_font = pygame.font.SysFont(None, 36)
 
@@ -159,16 +163,25 @@ while running:
     # Spawn d'ennemis
     if random.random() < 0.02:  # 2% de chance par frame
         side = random.choice(['left', 'right', 'top', 'bottom'])
-        if random.random() < 0.2:
-            enemy_type = "ship"
+        r = random.random()
+        if r < 0.15:
+            enemy_type = "dog"
+            enemy_width = 50
+            enemy_height = 50
+            enemy_speed = 2
+            enemy_health = 3
+        elif r < 0.5:
+            enemy_type = "rat"
             enemy_width = 30
             enemy_height = 30
             enemy_speed = 3
+            enemy_health = 2
         else:
-            enemy_type = "robot"
+            enemy_type = "mouse"
             enemy_width = 20
             enemy_height = 20
             enemy_speed = 4
+            enemy_health = 1
         if side == 'left':
             x = -enemy_width
             y = random.randint(0, screen_height - enemy_height)
@@ -189,8 +202,8 @@ while running:
             y = screen_height
             dx = 0
             dy = -enemy_speed  # se dirige vers le haut
-        enemy_list.append({'x': x, 'y': y, 'width': enemy_width, 'height': enemy_height, 'type': enemy_type, 'dx': dx, 'dy': dy, 'speed': enemy_speed})
-
+        enemy_list.append({'x': x, 'y': y, 'width': enemy_width, 'height': enemy_height,
+                           'type': enemy_type, 'dx': dx, 'dy': dy, 'speed': enemy_speed, 'health': enemy_health})
     # Mise à jour des ennemis
     new_enemy_list = []
     for enemy in enemy_list:
@@ -208,14 +221,21 @@ while running:
         for enemy in enemy_list[:]:
             enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy['width'], enemy['height'])
             if bullet_rect.colliderect(enemy_rect):
-                if enemy['type'] == "ship":
-                    enemy_color = (200, 0, 0)  # rouge foncé
-                    score += 20
-                else:
-                    enemy_color = (255, 100, 100)  # rouge clair
-                    score += 10
-                create_explosion(enemy['x'] + enemy['width'] // 2, enemy['y'] + enemy['height'] // 2, color=enemy_color)
-                enemy_list.remove(enemy)
+                # Décrémenter la santé de l'ennemi à chaque tir
+                enemy['health'] -= 1
+                # Si la santé tombe à zéro, l'ennemi est détruit
+                if enemy['health'] <= 0:
+                    if enemy['type'] == "rat":
+                        enemy_color = (200, 0, 0)  # rouge foncé pour les rats
+                        score += 20
+                    elif enemy['type'] == "mouse":
+                        enemy_color = (255, 100, 100)  # rouge clair pour les souris
+                        score += 10
+                    elif enemy['type'] == "dog":
+                        enemy_color = (255, 0, 0)  # rouge pour les chiens
+                        score += 30
+                    create_explosion(enemy['x'] + enemy['width'] // 2, enemy['y'] + enemy['height'] // 2, color=enemy_color)
+                    enemy_list.remove(enemy)
                 hit_enemy = True
                 break
         if not hit_enemy:
@@ -226,12 +246,28 @@ while running:
     for enemy in enemy_list[:]:
         enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy['width'], enemy['height'])
         if player_rect.colliderect(enemy_rect):
-            if enemy['type'] == "ship":
+            if enemy['type'] == "dog":
+                lives -= 1
+                create_explosion(astro_x + 25, astro_y + 25, color=(255, 0, 0), num_particles=50)
+                lost_life_surface = score_font.render("Vous avez perdu une vie!", True, WHITE)
+                screen.blit(lost_life_surface, (screen_width//2 - 100, screen_height//2))
+                pygame.display.flip()
+                pygame.time.delay(1000)
+            elif enemy['type'] == "rat":
                 score -= 10
-            else:
+                create_explosion(astro_x + 25, astro_y + 25)
+            else:  # mouse
                 score -= 5
-            create_explosion(astro_x + 25, astro_y + 25)
+                create_explosion(astro_x + 25, astro_y + 25)
             enemy_list.remove(enemy)
+
+    # Vérifier Game Over: si les vies tombent à 0
+    if lives <= 0:
+        game_over_surface = score_font.render("GAME OVER", True, WHITE)
+        screen.blit(game_over_surface, (screen_width//2 - 50, screen_height//2))
+        pygame.display.flip()
+        pygame.time.delay(2000)
+        running = False
 
     # Mise à jour de la liste des croquettes
     current_time = pygame.time.get_ticks()
@@ -272,14 +308,6 @@ while running:
             new_explosion_list.append(particle)
     explosion_list = new_explosion_list
 
-    # Vérifier Game Over
-    if score <= 0:
-        game_over_surface = score_font.render("GAME OVER", True, WHITE)
-        screen.blit(game_over_surface, (screen_width//2 - 50, screen_height//2))
-        pygame.display.flip()
-        pygame.time.delay(2000)
-        running = False
-
     # Affichage du fond spatial procédural
     screen.fill(BLACK)
     # Dessiner les étoiles
@@ -297,10 +325,12 @@ while running:
         pygame.draw.rect(screen, color, (croquette['x'], croquette['y'], croquette_size, croquette_size))
     # Dessiner les ennemis
     for enemy in enemy_list:
-        if enemy['type'] == "ship":
-            enemy_color = (200, 0, 0)  # rouge plus foncé pour les vaisseaux
+        if enemy['type'] == "rat":
+            enemy_color = (200, 0, 0)  # rouge plus foncé pour les rats
+        elif enemy['type'] == "dog":
+            enemy_color = (255, 0, 0)  # rouge pour les chiens
         else:
-            enemy_color = (255, 100, 100)  # rouge clair pour les robots
+            enemy_color = (255, 100, 100)  # rouge clair pour les souris
         pygame.draw.rect(screen, enemy_color, (enemy['x'], enemy['y'], enemy['width'], enemy['height']))
     # Dessiner les particules d'explosion
     for particle in explosion_list:
@@ -311,10 +341,13 @@ while running:
     # Afficher le sprite d'AstroPaws à sa position
     screen.blit(astro_sprite, (astro_x, astro_y))
     
-    # Afficher le score
+    # Afficher le score et les vies
     score_surface = score_font.render("Score: " + str(score), True, WHITE)
     screen.blit(score_surface, (10, 10))
-    
+    # Afficher les vies sous forme de cœurs en haut à droite
+    for i in range(lives):
+        screen.blit(heart_sprite, (screen_width - (heart_sprite.get_width() + 10) * (i + 1), 10))
+
     # Actualiser l'affichage
     pygame.display.flip()
 
