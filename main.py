@@ -91,6 +91,9 @@ lives = 9
 pygame.font.init()
 score_font = pygame.font.SysFont(None, 36)
 
+next_shot_allowed_time = 0
+cooldown_time = 300
+
 # Horloge pour contrôler le taux de rafraîchissement (60 FPS)
 clock = pygame.time.Clock()
 
@@ -103,6 +106,32 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                current_time = pygame.time.get_ticks()
+                if current_time >= next_shot_allowed_time:
+                    # Déterminer la direction du tir à partir des touches fléchées
+                    keys = pygame.key.get_pressed()
+                    dx = 0
+                    dy = 0
+                    if keys[pygame.K_LEFT]:
+                        dx -= 1
+                    if keys[pygame.K_RIGHT]:
+                        dx += 1
+                    if keys[pygame.K_UP]:
+                        dy -= 1
+                    if keys[pygame.K_DOWN]:
+                        dy += 1
+                    if dx == 0 and dy == 0:
+                        dy = -1  # par défaut, tirer vers le haut
+                    mag = math.sqrt(dx*dx + dy*dy)
+                    dx = dx / mag * bullet_speed
+                    dy = dy / mag * bullet_speed
+                    # Positionner le tir au centre d'AstroPaws
+                    bullet_rect = pygame.Rect(astro_x + 25 - bullet_width//2, astro_y + 25 - bullet_height//2, bullet_width, bullet_height)
+                    bullet = {'rect': bullet_rect, 'dx': dx, 'dy': dy}
+                    bullet_list.append(bullet)
+                    next_shot_allowed_time = current_time + cooldown_time
 
     # Gestion continue des touches (pour détecter plusieurs touches en même temps)
     keys = pygame.key.get_pressed()
@@ -115,29 +144,6 @@ while running:
     if keys[pygame.K_DOWN]:
         astro_y += speed
 
-    # Gestion du tir avec la barre espace
-    if keys[pygame.K_SPACE]:
-        # Déterminer la direction du tir à partir des touches fléchées
-        dx = 0
-        dy = 0
-        if keys[pygame.K_LEFT]:
-            dx -= 1
-        if keys[pygame.K_RIGHT]:
-            dx += 1
-        if keys[pygame.K_UP]:
-            dy -= 1
-        if keys[pygame.K_DOWN]:
-            dy += 1
-        if dx == 0 and dy == 0:
-            dy = -1  # par défaut, tirer vers le haut
-        mag = math.sqrt(dx*dx + dy*dy)
-        dx = dx / mag * bullet_speed
-        dy = dy / mag * bullet_speed
-        # Positionner le tir au centre d'AstroPaws
-        bullet_rect = pygame.Rect(astro_x + 25 - bullet_width//2, astro_y + 25 - bullet_height//2, bullet_width, bullet_height)
-        bullet = {'rect': bullet_rect, 'dx': dx, 'dy': dy}
-        bullet_list.append(bullet)
-    
     # Mise à jour de la position des tirs
     for bullet in bullet_list:
         bullet['rect'].x += bullet['dx']
