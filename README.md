@@ -27,13 +27,9 @@ Vous incarnez AstroPaws, un courageux chat astronaute qui explore l’espace pou
 
 🧩 **Synopsis du jeu :**
 
-Vous incarnez AstroPaws, un chat cosmonaute intrépide, en mission dans l’espace pour collecter un maximum de croquettes cosmiques !
+Vous incarnez AstroPaws, un chat cosmonaute intrépide, en mission dans l’espace pour collecter un maximum de croquettes cosmiques tout en évitant ou éliminant les dangers de l’espace. Gérer vos ressources, comme l’eau pour vos tirs, est essentiel pour survivre et atteindre le boss final de chaque niveau qui protège la légendaire "pâtée de l’espace".
 
-- Les croquettes marron rapportent 1 point, les croquettes dorées rapportent 10 points.
-- AstroPaws a 9 vies, comme tout bon chat qui se respecte.
-- Il faut éviter les souris, les rats et les chiens de l’espace, ou bien les éliminer avec des jets d’eau.
-- Attention à la gestion de l’eau ! Chaque tir consomme de l’eau, mais faire disparaître un ennemi vous permet d’en récupérer.
-- À la fin de chaque niveau, un boss redoutable garde l’accès à la légendaire "pâtée de l’espace".
+➡️ Retrouvez tous les détails du gameplay dans le fichier [gameplay.md](gameplay.md).
 
 🎮 **Contrôles du jeu :**
 
@@ -51,9 +47,12 @@ Tout le développement est disponible en ligne en toute transparence pour partag
 
 🗺️ **Roadmap à court terme :**
 
-- Améliorer le design global (l’espace et les ennemis).
-- Prévoir de nouveaux gameplay de stratégie (comme la gestion de l’eau, des neuf vies, etc.).
-- Sound design
+- Intégrer la musique 8-bit avec pygame.mixer.music et tester différents morceaux.
+- Créer un écran d’accueil avec un titre et un menu contrôlable au clavier.
+- Ajouter une fonction de pause (touche "P") avec affichage d’un message de pause.
+- Améliorer l’écran de Game Over en le transformant en un menu interactif.
+- Remplacer les formes des ennemis par des sprites animés.
+- Introduire des boss finaux pour enrichir l’expérience de jeu.
 
 💾 **Installation :**
 
