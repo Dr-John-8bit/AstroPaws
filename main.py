@@ -6,9 +6,9 @@ import math
 # Initialisation de Pygame
 pygame.init()
 
-# Dimensions de la fenêtre (format 4:3 style Atari)
-screen_width = 640
-screen_height = 480
+# Dimensions de la fenêtre (agrandies)
+screen_width = 800
+screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("AstroPaws")
 
@@ -56,6 +56,7 @@ for i in range(num_stars):
     speed = random.uniform(0.2, 1.0)
     star_list.append({'x': x, 'y': y, 'speed': speed})
 
+# Modification pour générer des planètes avec des couleurs aléatoires
 num_planets = 3
 planet_list = []
 for i in range(num_planets):
@@ -63,11 +64,12 @@ for i in range(num_planets):
     y = random.randint(0, screen_height)
     size = random.randint(8, 20)
     speed = random.uniform(0.1, 0.5)
-    planet_list.append({'x': x, 'y': y, 'size': size, 'speed': speed})
+    color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+    planet_list.append({'x': x, 'y': y, 'size': size, 'speed': speed, 'color': color})
 
 # Charger l'image du sprite d'AstroPaws
 astro_sprite = pygame.image.load("images/astro_paws.png").convert_alpha()
-astro_sprite = pygame.transform.scale(astro_sprite, (50, 50))
+astro_sprite = pygame.transform.scale(astro_sprite, (80, 80))
 
 # Position initiale d'AstroPaws
 astro_x = screen_width // 2
@@ -285,8 +287,7 @@ while running:
         pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
     # Dessiner les planètes
     for planet in planet_list:
-        pygame.draw.circle(screen, WHITE, (int(planet['x']), int(planet['y'])), planet['size'])
-    
+        pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
     # Dessiner les croquettes
     for croquette in croquette_list:
         if croquette.get('type') == "rare":
@@ -294,7 +295,6 @@ while running:
         else:
             color = ORANGE
         pygame.draw.rect(screen, color, (croquette['x'], croquette['y'], croquette_size, croquette_size))
-
     # Dessiner les ennemis
     for enemy in enemy_list:
         if enemy['type'] == "ship":
@@ -302,11 +302,9 @@ while running:
         else:
             enemy_color = (255, 100, 100)  # rouge clair pour les robots
         pygame.draw.rect(screen, enemy_color, (enemy['x'], enemy['y'], enemy['width'], enemy['height']))
-    
     # Dessiner les particules d'explosion
     for particle in explosion_list:
         pygame.draw.circle(screen, particle['color'], (int(particle['x']), int(particle['y'])), 2)
-
     # Afficher les tirs (jet d'eau bleu)
     for bullet in bullet_list:
         pygame.draw.rect(screen, BLUE, bullet['rect'])
