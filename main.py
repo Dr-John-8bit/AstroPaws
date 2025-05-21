@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import math
+import textwrap
 
 # Initialisation de Pygame
 pygame.init()
@@ -19,6 +20,8 @@ BLUE = (0, 0, 255)
 ORANGE = (255, 165, 0)
 GOLD = (255, 223, 0)
 YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+RED   = (255, 0, 0)
 
 # Ajout des listes pour les ennemis et explosions
 enemy_list = []
@@ -73,9 +76,18 @@ for i in range(num_planets):
 astro_sprite = pygame.image.load("images/astro_paws.png").convert_alpha()
 astro_sprite = pygame.transform.scale(astro_sprite, (80, 80))
 
+
 # Charger l'image du coeur pour les vies
 heart_sprite = pygame.image.load("images/heart.png").convert_alpha()
 heart_sprite = pygame.transform.scale(heart_sprite, (20, 20))
+
+# Charger l'image de l'écran d'accueil
+welcome_image = pygame.image.load("images/ecranaccueil.png").convert_alpha()
+welcome_image = pygame.transform.scale(welcome_image, (400, 300))  # taille réduite
+
+# Charger l'image du chat endormi pour la pause
+chat_sleep_image = pygame.image.load("images/chatdort.png").convert_alpha()
+chat_sleep_image = pygame.transform.scale(chat_sleep_image, (360, 240))
 
 # Position initiale d'AstroPaws
 astro_x = screen_width // 2
@@ -101,43 +113,236 @@ cooldown_time = 300
 # Horloge pour contrôler le taux de rafraîchissement (60 FPS)
 clock = pygame.time.Clock()
 
+#
+#
+# État du jeu : MENU, STORY, ou PLAYING
+game_state = "MENU"
+menu_blink = True
+menu_blink_time = pygame.time.get_ticks()
+
+# Variables de clignotement pour l'écran PAUSE
+pause_blink = True
+pause_blink_time = pygame.time.get_ticks()
+
+# Variables pour le menu étendu
+story_lines = [
+    "AstroPaws: Gourmet Quest",
+    "",
+    "Lointain secteur de la Cuisine.",
+    "Depuis la station Alpha-Felis, un signal d’alerte retentit dans le vide spatial. La dernière réserve de Pâtée Galactique™ a disparu !",
+    "Le Capitaine AstroPaws — félin courageux, gourmet interstellaire, et dernier espoir du Conseil des Chats — prend le contrôle de son Jetpack Cosmique.",
+    "Sa mission ? Traverser des champs d’astéroïdes, esquiver les ennemis de toujours (chiens errants, rats radioactifs, souris mutantes), et rassembler les 7 ingrédients sacrés de la pâtée de l’espace.",
+    "",
+    "Mais attention :",
+    "Chaque tir consomme de l’eau pure, rare et précieuse.",
+    "Chaque ennemi peut faire chuter votre score… ou vos vies.",
+    "Ramassez les réserves, visez juste, évitez les croquettes piégées !",
+    "",
+    "Gameplay",
+    "   - Déplacez AstroPaws avec les flèches directionnelles.",
+    "   - Tirez avec la barre Espace (consomme de l’eau).",
+    "   - Ramassez des croquettes (points) et de l’eau (munitions).",
+    "   - Esquivez les ennemis ou détruisez-les avec des jets d’eau !",
+    "   - Le jeu se termine si AstroPaws perd ses 9 vies.",
+    "",
+    "AstroPaws n’est pas un héros.",
+    "C’est un chat.",
+    "Mais parfois… c’est tout ce dont l’univers a besoin."
+]
+story_scroll_y = float(screen_height)
+story_speed = 0.5  # pixels par frame
+
 running = True
 while running:
     # Limiter le jeu à 60 images par seconde
     clock.tick(60)
-    
+
+    # === Écran STORY ===
+    if game_state == "STORY":
+        # Gestion des événements pour sortir de la Story
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_SPACE, pygame.K_ESCAPE, pygame.K_RETURN):
+                    story_scroll_y = float(screen_width)
+                    game_state = "MENU"
+        # Animer fond (étoiles+planètes)
+        for star in star_list:
+            star['x'] += star['speed']
+            star['y'] += star['speed'] * 0.5
+            if star['x'] > screen_width:
+                star['x'] = 0
+                star['y'] = random.randint(0, screen_height)
+        for planet in planet_list:
+            planet['x'] += planet['speed']
+            planet['y'] += planet['speed'] * 0.2
+            if planet['x'] > screen_width:
+                planet['x'] = 0
+                planet['y'] = random.randint(0, screen_height)
+        screen.fill(BLACK)
+        for star in star_list:
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        for planet in planet_list:
+            pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+        # Préparer le texte wrapé
+        display_lines = []
+        for idx, line in enumerate(story_lines):
+            color = GOLD if idx == 0 else WHITE
+            if line == "":
+                display_lines.append(("", color))
+            else:
+                for sub in textwrap.wrap(line, width=60):
+                    display_lines.append((sub, color))
+        # Afficher lignes défilantes
+        line_height = 36
+        for i, (text, color) in enumerate(display_lines):
+            surf = score_font.render(text, True, color)
+            rect = surf.get_rect(center=(screen_width//2, int(story_scroll_y + i*line_height)))
+            screen.blit(surf, rect)
+        story_scroll_y -= story_speed
+        # Retour menu quand fini
+        if story_scroll_y + len(display_lines)*line_height < 0:
+            story_scroll_y = float(screen_height)
+            game_state = "MENU"
+        pygame.display.flip()
+        continue
+
+    # === Écran MENU ===
+    if game_state == "MENU":
+        # Gestion des événements pour quitter, démarrer ou story
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    game_state = "PLAYING"
+                elif event.key == pygame.K_s:
+                    story_scroll_y = float(screen_height)
+                    game_state = "STORY"
+                elif event.key == pygame.K_q:
+                    running = False
+        # Animation de fond (étoiles et planètes)
+        for star in star_list:
+            star['x'] += star['speed']
+            star['y'] += star['speed'] * 0.5
+            if star['x'] > screen_width:
+                star['x'] = 0
+                star['y'] = random.randint(0, screen_height)
+        for planet in planet_list:
+            planet['x'] += planet['speed']
+            planet['y'] += planet['speed'] * 0.2
+            if planet['x'] > screen_width:
+                planet['x'] = 0
+                planet['y'] = random.randint(0, screen_height)
+        # Afficher le fond étoilé
+        screen.fill(BLACK)
+        for star in star_list:
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        for planet in planet_list:
+            pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+        # Afficher l'image d'accueil centrée en haut
+        image_rect = welcome_image.get_rect(midtop=(screen_width//2, 50))
+        screen.blit(welcome_image, image_rect)
+        # Clignotement du texte "PRESS SPACE TO START"
+        now = pygame.time.get_ticks()
+        if now - menu_blink_time > 500:
+            menu_blink = not menu_blink
+            menu_blink_time = now
+        prompt_y_base = 50 + 300 + 30  # image top + image height + marge
+        if menu_blink:
+            prompt = score_font.render("PRESS SPACE TO START", True, WHITE)
+            prompt_rect = prompt.get_rect(center=(screen_width//2, prompt_y_base))
+            screen.blit(prompt, prompt_rect)
+        # Prompt supplémentaire pour la Story
+        prompt2 = score_font.render("PRESS S FOR STORY", True, WHITE)
+        prompt2_rect = prompt2.get_rect(center=(screen_width//2, prompt_y_base + 40))
+        screen.blit(prompt2, prompt2_rect)
+        # Prompt pour quitter
+        prompt3 = score_font.render("PRESS Q TO QUIT", True, WHITE)
+        prompt3_rect = prompt3.get_rect(center=(screen_width//2, prompt_y_base + 80))
+        screen.blit(prompt3, prompt3_rect)
+        pygame.display.flip()
+        continue
+
+    # === Écran PAUSE ===
+    if game_state == "PAUSE":
+        # Gestion des événements pour reprendre ou quitter
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    game_state = "PLAYING"
+                elif event.key == pygame.K_q:
+                    running = False
+        # Affichage du menu pause
+        screen.fill(BLACK)
+        # Clignotement du titre PAUSE
+        now = pygame.time.get_ticks()
+        if now - pause_blink_time > 500:
+            pause_blink = not pause_blink
+            pause_blink_time = now
+        # Stats en pause
+        score_surface = score_font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_surface, (10, 10))
+        water_surface = score_font.render(f"Water: {water_ammo}", True, WHITE)
+        screen.blit(water_surface, (10, 50))
+        lives_surface = score_font.render(f"Lives: {lives}", True, WHITE)
+        screen.blit(lives_surface, (10, 90))
+        # Titre PAUSE clignotant
+        if pause_blink:
+            pause_surf = score_font.render("PAUSE", True, WHITE)
+            pause_rect = pause_surf.get_rect(center=(screen_width//2, screen_height//3))
+            screen.blit(pause_surf, pause_rect)
+        # Options colorées
+        resume_surf = score_font.render("Press P to resume", True, GREEN)
+        resume_rect = resume_surf.get_rect(center=(screen_width//2, screen_height//2))
+        screen.blit(resume_surf, resume_rect)
+        quit_surf = score_font.render("Press Q to quit", True, RED)
+        quit_rect = quit_surf.get_rect(center=(screen_width//2, screen_height*2//3))
+        screen.blit(quit_surf, quit_rect)
+        # Afficher le chat endormi en bas de l'écran de pause
+        chat_rect = chat_sleep_image.get_rect(midbottom=(screen_width//2, screen_height - 10))
+        screen.blit(chat_sleep_image, chat_rect)
+        pygame.display.flip()
+        continue
+
+    # === Écran JEU (PLAYING) ===
     # Gestion des événements
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            
-         if event.key == pygame.K_SPACE:
-             current_time = pygame.time.get_ticks()
-             if current_time >= next_shot_allowed_time and water_ammo > 0:
-                 # Déterminer la direction du tir à partir des touches fléchées
-                 keys = pygame.key.get_pressed()
-                 dx = 0
-                 dy = 0
-                 if keys[pygame.K_LEFT]:
-                     dx -= 1
-                 if keys[pygame.K_RIGHT]:
-                     dx += 1
-                 if keys[pygame.K_UP]:
-                     dy -= 1
-                 if keys[pygame.K_DOWN]:
-                     dy += 1
-                 if dx == 0 and dy == 0:
-                     dy = -1  # par défaut, tirer vers le haut
-                 mag = math.sqrt(dx*dx + dy*dy)
-                 dx = dx / mag * bullet_speed
-                 dy = dy / mag * bullet_speed
-                 # Positionner le tir au centre d'AstroPaws
-                 bullet_rect = pygame.Rect(astro_x + 25 - bullet_width//2, astro_y + 25 - bullet_height//2, bullet_width, bullet_height)
-                 bullet = {'rect': bullet_rect, 'dx': dx, 'dy': dy}
-                 bullet_list.append(bullet)
-                 next_shot_allowed_time = current_time + cooldown_time
-                 water_ammo -= 1
+            if event.key == pygame.K_p:
+                game_state = "PAUSE"
+                break
+            if event.key == pygame.K_SPACE:
+                current_time = pygame.time.get_ticks()
+                if current_time >= next_shot_allowed_time and water_ammo > 0:
+                    # Déterminer la direction du tir à partir des touches fléchées
+                    keys = pygame.key.get_pressed()
+                    dx = 0
+                    dy = 0
+                    if keys[pygame.K_LEFT]:
+                        dx -= 1
+                    if keys[pygame.K_RIGHT]:
+                        dx += 1
+                    if keys[pygame.K_UP]:
+                        dy -= 1
+                    if keys[pygame.K_DOWN]:
+                        dy += 1
+                    if dx == 0 and dy == 0:
+                        dy = -1  # par défaut, tirer vers le haut
+                    mag = math.sqrt(dx*dx + dy*dy)
+                    dx = dx / mag * bullet_speed
+                    dy = dy / mag * bullet_speed
+                    # Positionner le tir au centre d'AstroPaws
+                    bullet_rect = pygame.Rect(astro_x + 25 - bullet_width//2, astro_y + 25 - bullet_height//2, bullet_width, bullet_height)
+                    bullet = {'rect': bullet_rect, 'dx': dx, 'dy': dy}
+                    bullet_list.append(bullet)
+                    next_shot_allowed_time = current_time + cooldown_time
+                    water_ammo -= 1
 
     # Gestion continue des touches (pour détecter plusieurs touches en même temps)
     keys = pygame.key.get_pressed()
@@ -257,6 +462,7 @@ while running:
     # Collision entre AstroPaws et les ennemis
     for enemy in enemy_list[:]:
         enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy['width'], enemy['height'])
+        player_rect = pygame.Rect(astro_x, astro_y, 50, 50)
         if player_rect.colliderect(enemy_rect):
             if enemy['type'] == "dog":
                 lives -= 1
