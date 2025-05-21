@@ -72,9 +72,27 @@ for i in range(num_planets):
     color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
     planet_list.append({'x': x, 'y': y, 'size': size, 'speed': speed, 'color': color})
 
-# Charger l'image du sprite d'AstroPaws
-astro_sprite = pygame.image.load("images/astro_paws.png").convert_alpha()
-astro_sprite = pygame.transform.scale(astro_sprite, (80, 80))
+
+# Charger le sprite d'AstroPaws et ses versions gauche/droite/haut/bas
+astro_sprite_right = pygame.image.load("images/astro_paws.png").convert_alpha()
+astro_sprite_right = pygame.transform.scale(astro_sprite_right, (80, 80))
+astro_sprite_left = pygame.transform.flip(astro_sprite_right, True, False)
+# Créer les versions pour haut et bas en pivotant la version droite
+astro_sprite_up = pygame.transform.rotate(astro_sprite_right, 90)
+astro_sprite_down = pygame.transform.rotate(astro_sprite_right, -90)
+# Direction initiale
+astro_facing = "right"
+
+# Charger les sprites des croquettes et de l'eau
+# Agrandir les sprites de croquettes et d'eau
+brown_croquette_sprite = pygame.image.load("images/browncroquette.png").convert_alpha()
+brown_croquette_sprite = pygame.transform.scale(brown_croquette_sprite, (20, 20))
+# Agrandir la croquette dorée
+gold_croquette_sprite  = pygame.image.load("images/goldcroquette.png").convert_alpha()
+gold_croquette_sprite  = pygame.transform.scale(gold_croquette_sprite,  (30, 30))
+# Agrandir la réserve d'eau
+water_sprite           = pygame.image.load("images/water.png").convert_alpha()
+water_sprite           = pygame.transform.scale(water_sprite,           (30, 30))
 
 
 # Charger l'image du coeur pour les vies
@@ -88,6 +106,18 @@ welcome_image = pygame.transform.scale(welcome_image, (400, 300))  # taille réd
 # Charger l'image du chat endormi pour la pause
 chat_sleep_image = pygame.image.load("images/chatdort.png").convert_alpha()
 chat_sleep_image = pygame.transform.scale(chat_sleep_image, (360, 240))
+
+# Charger les sprites des ennemis
+mouse_sprite = pygame.image.load("images/badguymouse.png").convert_alpha()
+mouse_sprite = pygame.transform.scale(mouse_sprite, (20, 20))
+rat_sprite   = pygame.image.load("images/badguyrat.png").convert_alpha()
+rat_sprite   = pygame.transform.scale(rat_sprite,   (30, 30))
+dog_sprite   = pygame.image.load("images/badguydog.png").convert_alpha()
+dog_sprite   = pygame.transform.scale(dog_sprite,   (50, 50))
+
+# Charger l'image de Game Over
+gameover_image = pygame.image.load("images/gameover.png").convert_alpha()
+gameover_image = pygame.transform.scale(gameover_image, (400, 200))
 
 # Position initiale d'AstroPaws
 astro_x = screen_width // 2
@@ -103,9 +133,10 @@ bullet_height = 4
 # Initialiser le score, les vies et le font
 score = 0
 lives = 9
-water_ammo = 50
+water_ammo = 10
 pygame.font.init()
-score_font = pygame.font.SysFont(None, 36)
+# Augmentation de la taille de la police pour une meilleure lisibilité
+score_font = pygame.font.SysFont(None, 48)
 
 next_shot_allowed_time = 0
 cooldown_time = 300
@@ -308,6 +339,56 @@ while running:
         pygame.display.flip()
         continue
 
+    # === Écran GAME_OVER ===
+    if game_state == "GAME_OVER":
+        # Gestion des événements
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    # Réinitialiser le jeu
+                    score = 0
+                    lives = 9
+                    water_ammo = 50
+                    astro_x = screen_width // 2
+                    astro_y = screen_height // 2
+                    enemy_list.clear()
+                    explosion_list.clear()
+                    bullet_list.clear()
+                    water_item_list.clear()
+                    croquette_list.clear()
+                    # Recréer quelques croquettes initiales
+                    for i in range(5):
+                        x = random.randint(0, screen_width - croquette_size)
+                        y = random.randint(0, screen_height - croquette_size)
+                        spawn_time = pygame.time.get_ticks()
+                        croquette_type = "rare" if random.random() < 0.1 else "normal"
+                        croquette_list.append({'x': x, 'y': y, 'spawn_time': spawn_time, 'type': croquette_type})
+                    game_state = "MENU"
+                elif event.key == pygame.K_q:
+                    running = False
+        # Affichage du fond spatial
+        screen.fill(BLACK)
+        for star in star_list:
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        for planet in planet_list:
+            pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+        # Afficher l'image Game Over
+        go_rect = gameover_image.get_rect(center=(screen_width//2, screen_height//2 - 50))
+        screen.blit(gameover_image, go_rect)
+        # Afficher les stats
+        screen.blit(score_font.render(f"Score: {score}", True, WHITE), (10, 10))
+        screen.blit(score_font.render(f"Water: {water_ammo}", True, WHITE), (10, 50))
+        screen.blit(score_font.render(f"Lives: {lives}", True, WHITE), (10, 90))
+        # Afficher les options
+        r_surf = score_font.render("Press R to return to menu", True, GREEN)
+        q_surf = score_font.render("Press Q to quit", True, RED)
+        screen.blit(r_surf, r_surf.get_rect(center=(screen_width//2, screen_height//2 + 50)))
+        screen.blit(q_surf, q_surf.get_rect(center=(screen_width//2, screen_height//2 + 100)))
+        pygame.display.flip()
+        continue
+
     # === Écran JEU (PLAYING) ===
     # Gestion des événements
     for event in pygame.event.get():
@@ -348,12 +429,28 @@ while running:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         astro_x -= speed
-    if keys[pygame.K_RIGHT]:
+        astro_facing = "left"
+    elif keys[pygame.K_RIGHT]:
         astro_x += speed
-    if keys[pygame.K_UP]:
+        astro_facing = "right"
+    elif keys[pygame.K_UP]:
         astro_y -= speed
-    if keys[pygame.K_DOWN]:
+        astro_facing = "up"
+    elif keys[pygame.K_DOWN]:
         astro_y += speed
+        astro_facing = "down"
+
+    # Wrap-around : traverser d'un bord à l'autre
+    sprite_w = astro_sprite_right.get_width()
+    sprite_h = astro_sprite_right.get_height()
+    if astro_x > screen_width:
+        astro_x = -sprite_w
+    elif astro_x < -sprite_w:
+        astro_x = screen_width
+    if astro_y > screen_height:
+        astro_y = -sprite_h
+    elif astro_y < -sprite_h:
+        astro_y = screen_height
 
     # Mise à jour de la position des tirs
     for bullet in bullet_list:
@@ -420,7 +517,8 @@ while running:
             dx = 0
             dy = -enemy_speed  # se dirige vers le haut
         enemy_list.append({'x': x, 'y': y, 'width': enemy_width, 'height': enemy_height,
-                           'type': enemy_type, 'dx': dx, 'dy': dy, 'speed': enemy_speed, 'health': enemy_health})
+                           'type': enemy_type, 'dx': dx, 'dy': dy, 'speed': enemy_speed, 'health': enemy_health,
+                           'bob_phase': random.uniform(0, 2 * math.pi)})
     # Mise à jour des ennemis
     new_enemy_list = []
     for enemy in enemy_list:
@@ -481,11 +579,9 @@ while running:
 
     # Vérifier Game Over: si les vies tombent à 0
     if lives <= 0:
-        game_over_surface = score_font.render("GAME OVER", True, WHITE)
-        screen.blit(game_over_surface, (screen_width//2 - 50, screen_height//2))
-        pygame.display.flip()
-        pygame.time.delay(2000)
-        running = False
+        # Passer en écran de Game Over
+        game_state = "GAME_OVER"
+        continue
 
     # Mise à jour de la liste des croquettes
     current_time = pygame.time.get_ticks()
@@ -522,7 +618,10 @@ while running:
     
     # Collision entre AstroPaws et les réserves d'eau
     for item in water_item_list[:]:
-        water_rect = pygame.Rect(item['x'], item['y'], 10, 10)
+        # Utiliser la taille réelle du sprite pour la collision
+        width = water_sprite.get_width()
+        height = water_sprite.get_height()
+        water_rect = pygame.Rect(item['x'], item['y'], width, height)
         if player_rect.colliderect(water_rect):
             water_ammo += 10
             water_item_list.remove(item)
@@ -552,33 +651,45 @@ while running:
     # Dessiner les planètes
     for planet in planet_list:
         pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
-    # Dessiner les croquettes
+    # Dessiner les croquettes avec sprites
     for croquette in croquette_list:
         if croquette.get('type') == "rare":
-            color = GOLD
+            sprite = gold_croquette_sprite
         else:
-            color = ORANGE
-        pygame.draw.rect(screen, color, (croquette['x'], croquette['y'], croquette_size, croquette_size))
-    # Dessiner les réserves d'eau (objets d'acquisition d'eau)
+            sprite = brown_croquette_sprite
+        screen.blit(sprite, (croquette['x'], croquette['y']))
+    # Dessiner les réserves d'eau avec sprite
     for item in water_item_list:
-        pygame.draw.rect(screen, (0, 200, 255), (item['x'], item['y'], 10, 10))
-    # Dessiner les ennemis
+        screen.blit(water_sprite, (item['x'], item['y']))
+    # Dessiner les ennemis avec des sprites et animation de flottement (bob)
+    current_time = pygame.time.get_ticks()
     for enemy in enemy_list:
-        if enemy['type'] == "rat":
-            enemy_color = (200, 0, 0)  # rouge plus foncé pour les rats
-        elif enemy['type'] == "dog":
-            enemy_color = (255, 0, 0)  # rouge pour les chiens
-        else:
-            enemy_color = (255, 100, 100)  # rouge clair pour les souris
-        pygame.draw.rect(screen, enemy_color, (enemy['x'], enemy['y'], enemy['width'], enemy['height']))
+        # Choisir le sprite selon le type
+        if enemy['type'] == "mouse":
+            sprite = mouse_sprite
+        elif enemy['type'] == "rat":
+            sprite = rat_sprite
+        else:  # dog
+            sprite = dog_sprite
+        # Calculer un décalage vertical (bob) plus marqué et plus rapide
+        bob_offset = math.sin(current_time / 300 + enemy.get('bob_phase', 0)) * 15
+        # Dessiner le sprite avec le bob vertical
+        screen.blit(sprite, (enemy['x'], enemy['y'] + bob_offset))
     # Dessiner les particules d'explosion
     for particle in explosion_list:
         pygame.draw.circle(screen, particle['color'], (int(particle['x']), int(particle['y'])), 2)
     # Afficher les tirs (jet d'eau bleu)
     for bullet in bullet_list:
         pygame.draw.rect(screen, BLUE, bullet['rect'])
-    # Afficher le sprite d'AstroPaws à sa position
-    screen.blit(astro_sprite, (astro_x, astro_y))
+    # Afficher AstroPaws selon la direction
+    if astro_facing == "left":
+        screen.blit(astro_sprite_left, (astro_x, astro_y))
+    elif astro_facing == "right":
+        screen.blit(astro_sprite_right, (astro_x, astro_y))
+    elif astro_facing == "up":
+        screen.blit(astro_sprite_up, (astro_x, astro_y))
+    else:  # "down"
+        screen.blit(astro_sprite_down, (astro_x, astro_y))
     
     # Afficher le score et les vies
     score_surface = score_font.render("Score: " + str(score), True, WHITE)
