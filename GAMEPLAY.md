@@ -152,4 +152,65 @@ Les ennemis apparaissent aléatoirement sur les bords de l’écran et se dépla
 - **Ennemis** : Des ennemis (chien, rat, souris) apparaissent aléatoirement sur les bords et se déplacent vers l’intérieur. Leur élimination rapporte des points, tandis que leur collision affecte soit le score (rat et souris), soit les vies (chien).
 - Le gameplay propose un défi équilibré entre le déplacement, le tir, la gestion des ressources et l’évitement des ennemis, renforcé par des effets visuels grâce aux explosions et à l’arrière-plan dynamique.
 
-Ce système crée une dynamique intéressante où le joueur doit gérer ses tirs (en fonction de l’eau disponible), collecter des bonus, et rester vigilant face aux différents types d’ennemis qui impactent différemment le score et les vies.
+
+---
+
+## ✅ Fonctionnalités déjà implémentées
+
+### 1. Mouvements et tirs
+- Déplacement d’AstroPaws avec les flèches (4 directions + diagonales).
+- Tir directionnel (haut/bas/gauche/droite) avec la barre **Espace**, limité par un cooldown de **300 ms**.
+
+### 2. Ressources et UI
+- **Score** : collecte de croquettes normales (+1) et rares (+5).
+- **Eau** : réservoir initial à 50 L, chaque tir en consomme 1 L, recharge de +10 L via des réserves d’eau aléatoires.
+- **Vies** : 9 vies représentées par des cœurs en haut à droite ; perte d’une vie au contact d’un chien.
+
+### 3. Ennemis avec santé
+- Trois types d’ennemis (souris, rats, chiens) avec **santé** respective de 1, 2, et 3 tirs.
+- Récompenses à la destruction : +10 / +20 / +30 points.
+- Pénalités en collision : –5 / –10 points pour souris / rat, –1 vie + grosse explosion pour chien.
+
+### 4. Décor et effets
+- Fond spatial procédural (étoiles + planètes colorées, effet parallaxe).
+- Effets d’explosion (20 particules standard, 50 pour les chiens).
+
+### 5. Menus et écrans
+- **MENU** : fond étoilé animé, image d’accueil redimensionnée, invites clignotantes : “PRESS SPACE TO START”, “PRESS S FOR STORY”, “PRESS Q TO QUIT”.
+- **STORY** : texte défilant façon *Star Wars*, wrapping automatique, vitesse ralentie, retour automatique ou touche Espace / Échap.
+- **PLAYING** : boucle de jeu active.
+- **PAUSE** : touche **P**, écran noir avec stats (score, eau, vies), titre “PAUSE” clignotant, options “Press P to resume” (vert) et “Press Q to quit” (rouge), image du chat qui dort en bas.
+- **GAME OVER** : apparition d’un message “GAME OVER” et fin de la partie.
+
+---
+
+## 🚀 Feuille de route mise à jour
+
+### 1. Musique et effets sonores 8-bit
+- Charger et jouer des fichiers `.ogg` (musique de fond en boucle + effets : tir, explosion, collecte).
+- Ajouter un menu **Options** pour régler le volume de la musique / des effets.
+
+### 2. Animation des sprites
+- AstroPaws : gestion de l’orientation (flip ou sprites dédiés) selon la direction.
+- Ennemis : remplacer les rectangles par des sprites pixel art, ajouter quelques frames d’animation.
+
+### 3. Écran d’accueil et sous-menus
+- Ajouter un sous-menu **Options** (volume, contrôles).
+- Améliorer les transitions (fondu, balayage…) entre les différents écrans.
+
+### 4. Boss et niveaux
+- Concevoir un ou plusieurs boss finaux avec mécaniques spéciales.
+- Ajouter des zones / niveaux différents (champs d’astéroïdes, nébuleuses…).
+
+### 5. Mini-carte & HUD avancé
+- Implémenter une mini-carte pour visualiser la position d’AstroPaws et des ennemis.
+- Afficher des indicateurs de progression ou barres de santé pour les boss.
+
+### 6. Polish et équilibrage
+- Ajuster les fréquences d’apparition, vitesses, coûts en eau, récompenses.
+- Tester et corriger les bugs de collision ou de logique.
+
+### 7. Fonctionnalités supplémentaires
+- Système de **sauvegarde** et **high-scores**.
+- **Support manette**.
+- Ajout d’écrans de **victoire** et de **crédits**.
