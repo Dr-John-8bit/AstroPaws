@@ -805,18 +805,26 @@ while running:
 
     # Gestion continue des touches (pour détecter plusieurs touches en même temps)
     keys = pygame.key.get_pressed()
+    # Gestion du déplacement avec diagonales
+    dx = dy = 0
     if keys[pygame.K_LEFT]:
-        astro_x -= speed
+        dx -= speed
         astro_facing = "left"
-    elif keys[pygame.K_RIGHT]:
-        astro_x += speed
+    if keys[pygame.K_RIGHT]:
+        dx += speed
         astro_facing = "right"
-    elif keys[pygame.K_UP]:
-        astro_y -= speed
+    if keys[pygame.K_UP]:
+        dy -= speed
         astro_facing = "up"
-    elif keys[pygame.K_DOWN]:
-        astro_y += speed
+    if keys[pygame.K_DOWN]:
+        dy += speed
         astro_facing = "down"
+    # Normaliser la vitesse en diagonale
+    if dx != 0 and dy != 0:
+        dx *= 0.7071  # 1/sqrt(2)
+        dy *= 0.7071
+    astro_x += dx
+    astro_y += dy
 
     # Wrap-around : traverser d'un bord à l'autre
     sprite_w = astro_sprite_right.get_width()
