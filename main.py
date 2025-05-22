@@ -4,6 +4,11 @@ import random
 import math
 import textwrap
 
+# Importer la configuration des niveaux
+import levels
+# Index du niveau courant (initialisé à 0 localement)
+level_idx = 0
+
 # Initialisation de Pygame
 pygame.init()
 
@@ -22,6 +27,7 @@ GOLD = (255, 223, 0)
 YELLOW = (255, 255, 0)
 GREEN = (0, 255, 0)
 RED   = (255, 0, 0)
+CYAN  = (0, 255, 255)
 
 # Ajout des listes pour les ennemis et explosions
 enemy_list = []
@@ -35,6 +41,40 @@ def create_explosion(x, y, color=YELLOW, num_particles=20):
         dy = math.sin(angle) * speed
         lifetime = random.randint(20, 40)
         explosion_list.append({'x': x, 'y': y, 'dx': dx, 'dy': dy, 'lifetime': lifetime, 'color': color})
+
+# Effet de warp d'étoiles suivi d'un flash blanc
+def warp_effect():
+    # Tunnel d'étoiles puis flash blanc
+    center_x, center_y = screen_width // 2, screen_height // 2
+    # Effet warp encore plus dense et plus lent
+    for _ in range(30):  # plus d'étapes pour densifier
+        screen.fill(BLACK)
+        # Déplacer et dessiner les étoiles principales
+        for star in star_list:
+            dx = star['x'] - center_x
+            dy = star['y'] - center_y
+            star['x'] = center_x + dx * 1.15
+            star['y'] = center_y + dy * 1.15
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        # Ajouter des étoiles supplémentaires pour saturer l'effet
+        for _ in range(200):  # étoile bonus
+            rx = random.randint(0, screen_width)
+            ry = random.randint(0, screen_height)
+            ddx = rx - center_x
+            ddy = ry - center_y
+            x2 = center_x + ddx * 1.15
+            y2 = center_y + ddy * 1.15
+            pygame.draw.circle(screen, WHITE, (int(x2), int(y2)), 1)
+        pygame.display.flip()
+        pygame.time.delay(70)  # délai encore un peu plus long pour percevoir l'effet
+    # Flash blanc
+    screen.fill(WHITE)
+    pygame.display.flip()
+    pygame.time.delay(100)
+    # Régénérer les étoiles pour le prochain level
+    for star in star_list:
+        star['x'] = random.randint(0, screen_width)
+        star['y'] = random.randint(0, screen_height)
 
 croquette_size = 10
 croquette_lifetime = 5000  # Durée de vie en millisecondes (5 secondes)
@@ -62,6 +102,7 @@ for i in range(num_stars):
     star_list.append({'x': x, 'y': y, 'speed': speed})
 
 # Modification pour générer des planètes avec des couleurs aléatoires
+
 num_planets = 3
 planet_list = []
 for i in range(num_planets):
@@ -71,6 +112,51 @@ for i in range(num_planets):
     speed = random.uniform(0.1, 0.5)
     color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
     planet_list.append({'x': x, 'y': y, 'size': size, 'speed': speed, 'color': color})
+
+# ==== OVNIs décoratifs ====
+class UFO:
+    def __init__(self, x, y, scale=1.0, speed=0.5, color=(150, 200, 255)):
+        self.x = x
+        self.y = y
+        self.scale = scale
+        self.speed = speed
+        self.angle = random.uniform(0, 2 * math.pi)
+        # Contour vectoriel d'un saucer (disque + dôme)
+        self.pointlist = [(-9,0),(-3,-3),(-2,-6),(2,-6),(3,-3),(9,0),(-9,0),(-3,4),(3,4),(9,0)]
+        self.color = color
+    def update(self):
+        # Avance et oscille légèrement
+        self.x += math.cos(self.angle) * self.speed
+        self.y += math.sin(self.angle) * self.speed
+        self.angle += random.uniform(-0.05, 0.05)
+        # Wrap-around de l'UFO
+        if self.x < 0: self.x = screen_width
+        elif self.x > screen_width: self.x = 0
+        if self.y < 0: self.y = screen_height
+        elif self.y > screen_height: self.y = 0
+    def draw(self):
+        # Calculer et tracer le contour
+        transformed = []
+        for px, py in self.pointlist:
+            tx = px * self.scale
+            ty = py * self.scale
+            rx = tx * math.cos(self.angle) - ty * math.sin(self.angle)
+            ry = tx * math.sin(self.angle) + ty * math.cos(self.angle)
+            transformed.append((self.x + rx, self.y + ry))
+        pygame.draw.aalines(screen, self.color, True, transformed)
+
+# Créer quelques OVNIs décoratifs
+ufo_list = []
+for _ in range(2):
+    ufo_list.append(
+        UFO(
+            random.uniform(0, screen_width),
+            random.uniform(0, screen_height),
+            scale=random.uniform(0.5, 1.0),
+            speed=random.uniform(0.2, 0.7),
+            color=(random.randint(100,255), random.randint(100,255), random.randint(100,255))
+        )
+    )
 
 
 # Charger le sprite d'AstroPaws et ses versions gauche/droite/haut/bas
@@ -85,11 +171,12 @@ astro_facing = "right"
 
 # Charger les sprites des croquettes et de l'eau
 # Agrandir les sprites de croquettes et d'eau
+# Agrandir les sprites de croquettes
 brown_croquette_sprite = pygame.image.load("images/browncroquette.png").convert_alpha()
-brown_croquette_sprite = pygame.transform.scale(brown_croquette_sprite, (20, 20))
+brown_croquette_sprite = pygame.transform.scale(brown_croquette_sprite, (30, 30))  # croquette normale agrandie
 # Agrandir la croquette dorée
 gold_croquette_sprite  = pygame.image.load("images/goldcroquette.png").convert_alpha()
-gold_croquette_sprite  = pygame.transform.scale(gold_croquette_sprite,  (30, 30))
+gold_croquette_sprite  = pygame.transform.scale(gold_croquette_sprite,  (40, 40))  # croquette rare encore plus grande
 # Agrandir la réserve d'eau
 water_sprite           = pygame.image.load("images/water.png").convert_alpha()
 water_sprite           = pygame.transform.scale(water_sprite,           (30, 30))
@@ -103,9 +190,12 @@ heart_sprite = pygame.transform.scale(heart_sprite, (20, 20))
 welcome_image = pygame.image.load("images/ecranaccueil.png").convert_alpha()
 welcome_image = pygame.transform.scale(welcome_image, (400, 300))  # taille réduite
 
-# Charger l'image du chat endormi pour la pause
 chat_sleep_image = pygame.image.load("images/chatdort.png").convert_alpha()
 chat_sleep_image = pygame.transform.scale(chat_sleep_image, (360, 240))
+
+# Charger la tête d’AstroPaws pour l’écran VS
+astro_head = pygame.image.load("images/astro_paws_head.png").convert_alpha()
+astro_head = pygame.transform.scale(astro_head, (120, 120))
 
 # Charger les sprites des ennemis
 mouse_sprite = pygame.image.load("images/badguymouse.png").convert_alpha()
@@ -115,9 +205,35 @@ rat_sprite   = pygame.transform.scale(rat_sprite,   (30, 30))
 dog_sprite   = pygame.image.load("images/badguydog.png").convert_alpha()
 dog_sprite   = pygame.transform.scale(dog_sprite,   (50, 50))
 
+# Charger les sprites morts pour la transition de niveau
+# Mettre les sprites morts à la taille d'AstroPaws (astro_head)
+mouse_dead_sprite = pygame.image.load("images/badguymouse_dead.png").convert_alpha()
+rat_dead_sprite   = pygame.image.load("images/badguyrat_dead.png").convert_alpha()
+dog_dead_sprite   = pygame.image.load("images/badguydog_dog.png").convert_alpha()
+dead_size = astro_head.get_size()
+mouse_dead_sprite = pygame.transform.scale(mouse_dead_sprite, dead_size)
+rat_dead_sprite   = pygame.transform.scale(rat_dead_sprite,   dead_size)
+dog_dead_sprite   = pygame.transform.scale(dog_dead_sprite,   dead_size)
+
 # Charger l'image de Game Over
 gameover_image = pygame.image.load("images/gameover.png").convert_alpha()
 gameover_image = pygame.transform.scale(gameover_image, (400, 200))
+ # Charger l'image de victoire de niveau
+youwin_image = pygame.image.load("images/youwin.png").convert_alpha()
+youwin_image = pygame.transform.scale(youwin_image, (400, 200))
+
+# Charger l'image du guide (doc)
+doctor_image = pygame.image.load("images/astropaws_doctor.png").convert_alpha()
+doctor_image = pygame.transform.scale(doctor_image, (150, 150))
+
+# Charger les icônes d'inventaire
+# Agrandissement des icônes d'inventaire
+shield_icon = pygame.image.load("images/shield_icon.png").convert_alpha()
+shield_icon = pygame.transform.scale(shield_icon, (48, 48))
+hyper_icon  = pygame.image.load("images/hyper_icon.png").convert_alpha()
+hyper_icon  = pygame.transform.scale(hyper_icon,  (48, 48))
+ingredient_icon = pygame.image.load("images/ingredient_icon.png").convert_alpha()
+ingredient_icon = pygame.transform.scale(ingredient_icon, (48, 48))
 
 # Position initiale d'AstroPaws
 astro_x = screen_width // 2
@@ -137,6 +253,8 @@ water_ammo = 10
 pygame.font.init()
 # Augmentation de la taille de la police pour une meilleure lisibilité
 score_font = pygame.font.SysFont(None, 48)
+# Police plus petite pour les sous-titres et les blagues
+subtitle_font = pygame.font.SysFont(None, 32)
 
 next_shot_allowed_time = 0
 cooldown_time = 300
@@ -153,7 +271,14 @@ menu_blink_time = pygame.time.get_ticks()
 
 # Variables de clignotement pour l'écran PAUSE
 pause_blink = True
+
 pause_blink_time = pygame.time.get_ticks()
+
+# Variables d'animation pour vie, score et eau
+life_anim = {'active': False, 'index': None, 'start': 0, 'duration': 500}
+score_blink = False
+score_blink_time = pygame.time.get_ticks()
+water_anim = {'active': False, 'start': 0, 'duration': 500}
 
 # Variables pour le menu étendu
 story_lines = [
@@ -184,9 +309,108 @@ story_scroll_y = float(screen_height)
 story_speed = 0.5  # pixels par frame
 
 running = True
+# --- Variables pour le chronomètre, bouclier, récompense ---
+game_start_time = None
+reward_shown = False
+shield_charges = 0
+shield_active = False
+shield_start_time = None
+shield_duration = 5000  # 5 secondes en ms
+shield_last_granted_time = None  # timestamp de dernière attribution de charge
+shield_cooldown = 30000         # 30 secondes de recharge
+# Animation clignotante pour bouclier dans l'inventaire
+shield_inv_anim = {'active': False, 'start': 0, 'duration': 1000}  # 1 seconde
+hyper_charges = 0               # charges d'hyperespace
+ingredients_collected = []      # liste des ingrédients collectés
+paused_time_accum = 0       # temps total passé en pause (ms)
+pause_start_time = None     # timestamp du début de la pause
+level_win_start_time = None  # timestamp du début de l'écran LEVEL_WIN
+now = 0
 while running:
     # Limiter le jeu à 60 images par seconde
     clock.tick(60)
+    # Temps courant
+    now = pygame.time.get_ticks()
+    # Initialiser le chronomètre au début du jeu
+    if game_state == "PLAYING" and game_start_time is None:
+        game_start_time = now
+    # Déclencher la récompense à 30 secondes
+    if game_state == "PLAYING" and not reward_shown and game_start_time is not None and now - game_start_time >= 30000:
+        game_state = "REWARD"
+        continue
+    # Recharge automatique du bouclier toutes les shield_cooldown ms
+    if game_state == "PLAYING" and reward_shown and shield_last_granted_time is not None and now - shield_last_granted_time >= shield_cooldown:
+        shield_charges += 1
+        shield_last_granted_time = now
+        # Animer l'icône de bouclier dans l'inventaire
+        shield_inv_anim['active'] = True
+        shield_inv_anim['start'] = now
+
+    # === Écran INFO ===
+    if game_state == "INFO":
+        # Événements
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    game_state = "MENU"
+        # Fond uni pour l'écran INFO
+        screen.fill(BLACK)
+        # Animation de Dr Chat (bob vertical + rotation)
+        now = pygame.time.get_ticks()
+        angle = 5 * math.sin(now / 500)           # amplitude 5° en 1s
+        y_bob = 10 + 10 * math.sin(now / 400)     # amplitude 10px en 0.8s
+        rotated_doc = pygame.transform.rotate(doctor_image, angle)
+        doc_rect = rotated_doc.get_rect(topright=(screen_width - 10, y_bob))
+        screen.blit(rotated_doc, doc_rect)
+        # Liste des entrées
+        entries = [
+            (heart_sprite,  "Vie : perdre 1 vie si touché par un chien."),
+            (water_sprite,  "Eau : -1L par tir, ramasse bidon pour +10L."),
+            (shield_icon,   "Bouclier (H) : 5s de protection, cooldown 30s."),
+            (hyper_icon,    "Hyperdrive (J) : dash en avant. WIP"),
+            (ingredient_icon, "Ingrédient : collecte pour pâtée cosmique."),
+            ((brown_croquette_sprite, gold_croquette_sprite), "Croquettes : +3pts (marron), +10pts (dorée)."),
+            (mouse_sprite,  "Souris : 1 tir pour tuer, +10pts, collision -5pts."),
+            (rat_sprite,    "Rat : 1 tir pour tuer, +20pts, collision -10pts."),
+            (dog_sprite,    "Chien : 3 tirs pour tuer, +30pts, collision -1 vie."),
+            (None,          f"Score requis : {levels.levels[0]['target_score']} -> N2, {levels.levels[1]['target_score']}-> N3, {levels.levels[2]['target_score']}-> Fin")
+        ]
+        # Affichage
+        y = 60
+        for icon, text in entries:
+            if icon:
+                # si tuple d'icônes (croquettes marron+dorée)
+                if isinstance(icon, tuple):
+                    first, second = icon
+                    # dessiner marron puis dorée
+                    screen.blit(first, (50, y))
+                    screen.blit(second, (50 + first.get_width() + 10, y))
+                    x_text = 50 + first.get_width() + 10 + second.get_width() + 20
+                else:
+                    # cœur plus grand et ennemis à taille du chien
+                    if icon == heart_sprite:
+                        display_icon = pygame.transform.scale(icon, (40, 40))
+                    elif icon in (mouse_sprite, rat_sprite):
+                        display_icon = pygame.transform.scale(icon, dog_sprite.get_size())
+                    else:
+                        display_icon = icon
+                    screen.blit(display_icon, (50, y))
+                    x_text = 50 + display_icon.get_width() + 20
+            else:
+                x_text = 50
+            # texte
+            txt_surf = subtitle_font.render(text, True, WHITE)
+            screen.blit(txt_surf, (x_text, y + 8))
+            y += 50
+        # Bas de page
+        hint = subtitle_font.render("Press SPACE to return", True, GREEN)
+        # Remonter le message pour éviter chevauchement
+        hint_rect = hint.get_rect(midbottom=(screen_width//2, screen_height - 10))
+        screen.blit(hint, hint_rect)
+        pygame.display.flip()
+        continue
 
     # === Écran STORY ===
     if game_state == "STORY":
@@ -196,7 +420,7 @@ while running:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_SPACE, pygame.K_ESCAPE, pygame.K_RETURN):
-                    story_scroll_y = float(screen_width)
+                    story_scroll_y = float(screen_height)
                     game_state = "MENU"
         # Animer fond (étoiles+planètes)
         for star in star_list:
@@ -223,7 +447,7 @@ while running:
             if line == "":
                 display_lines.append(("", color))
             else:
-                for sub in textwrap.wrap(line, width=60):
+                for sub in textwrap.wrap(line, width=40):
                     display_lines.append((sub, color))
         # Afficher lignes défilantes
         line_height = 36
@@ -241,18 +465,22 @@ while running:
 
     # === Écran MENU ===
     if game_state == "MENU":
-        # Gestion des événements pour quitter, démarrer ou story
+        # Gestion des événements pour quitter, démarrer ou story/info
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    game_state = "PLAYING"
+                    # Aller à l'écran d'intro du niveau 1
+                    level_idx = 0
+                    game_state = "LEVEL_INTRO"
                 elif event.key == pygame.K_s:
                     story_scroll_y = float(screen_height)
                     game_state = "STORY"
                 elif event.key == pygame.K_q:
                     running = False
+                elif event.key == pygame.K_i:
+                    game_state = "INFO"
         # Animation de fond (étoiles et planètes)
         for star in star_list:
             star['x'] += star['speed']
@@ -266,36 +494,145 @@ while running:
             if planet['x'] > screen_width:
                 planet['x'] = 0
                 planet['y'] = random.randint(0, screen_height)
-        # Afficher le fond étoilé
+        # Affichage du fond étoilé
         screen.fill(BLACK)
         for star in star_list:
             pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
         for planet in planet_list:
             pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
-        # Afficher l'image d'accueil centrée en haut
+        # Afficher l'image d'accueil
         image_rect = welcome_image.get_rect(midtop=(screen_width//2, 50))
         screen.blit(welcome_image, image_rect)
-        # Clignotement du texte "PRESS SPACE TO START"
+        # Clignotement du texte
         now = pygame.time.get_ticks()
         if now - menu_blink_time > 500:
             menu_blink = not menu_blink
             menu_blink_time = now
-        prompt_y_base = 50 + 300 + 30  # image top + image height + marge
+        prompt_y_base = 50 + welcome_image.get_height() + 30
         if menu_blink:
             prompt = score_font.render("PRESS SPACE TO START", True, WHITE)
             prompt_rect = prompt.get_rect(center=(screen_width//2, prompt_y_base))
             screen.blit(prompt, prompt_rect)
-        # Prompt supplémentaire pour la Story
         prompt2 = score_font.render("PRESS S FOR STORY", True, WHITE)
         prompt2_rect = prompt2.get_rect(center=(screen_width//2, prompt_y_base + 40))
         screen.blit(prompt2, prompt2_rect)
-        # Prompt pour quitter
         prompt3 = score_font.render("PRESS Q TO QUIT", True, WHITE)
         prompt3_rect = prompt3.get_rect(center=(screen_width//2, prompt_y_base + 80))
         screen.blit(prompt3, prompt3_rect)
+        prompt4 = score_font.render("PRESS I FOR INFO", True, WHITE)
+        prompt4_rect = prompt4.get_rect(center=(screen_width//2, prompt_y_base + 120))
+        screen.blit(prompt4, prompt4_rect)
+        pygame.display.flip()
+        continue
+    # === Écran LEVEL_INTRO ===
+    if game_state == "LEVEL_INTRO":
+        # Gérer la sortie ou continuer
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_c:
+                    # Warp spatial avant de démarrer le niveau
+                    warp_effect()
+                    game_state = "PLAYING"
+                elif event.key == pygame.K_q:
+                    running = False
+        # Fond étoilé
+        screen.fill(BLACK)
+        for star in star_list:
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        for planet in planet_list:
+            pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+        # Numérotation du niveau
+        level_str = f"Niveau {level_idx+1}"
+        level_surf = score_font.render(level_str, True, WHITE)
+        level_rect = level_surf.get_rect(center=(screen_width//2, 30))
+        screen.blit(level_surf, level_rect)
+        # Offset vertical pour placer le duel
+        y_offset = 80
+
+        # VS layout sous le titre
+        # Animation de hochement de tête d'AstroPaws
+        head_angle = 10 * math.sin(now / 300)  # amplitude 10°, période ~600ms
+        rotated_head = pygame.transform.rotate(astro_head, head_angle)
+        ah_rect = rotated_head.get_rect(center=(screen_width//4, y_offset + 80))
+        screen.blit(rotated_head, ah_rect)
+        vs_surf = score_font.render("VS.", True, YELLOW)
+        vs_rect = vs_surf.get_rect(center=(screen_width//2, y_offset + 80))
+        screen.blit(vs_surf, vs_rect)
+        # Ennemi à droite avec animation de pulsation pour faire peur
+        enemy_sprite = mouse_sprite if level_idx == 0 else rat_sprite if level_idx == 1 else dog_sprite
+        # Calculer un facteur de pulsation sinusoïdal
+        pulse = 1 + 0.1 * math.sin(now / 200)
+        base_w, base_h = astro_head.get_size()
+        anim_size = (int(base_w * pulse), int(base_h * pulse))
+        animated_enemy = pygame.transform.scale(enemy_sprite, anim_size)
+        eh_rect = animated_enemy.get_rect(center=(3 * screen_width // 4, y_offset + 80))
+        screen.blit(animated_enemy, eh_rect)
+
+        # Sous-titre descriptif (wrap si nécessaire)
+        level_name = levels.levels[level_idx]['name']
+        desc = f"AstroPaws contre {level_name}"
+        wrapped_desc = textwrap.wrap(desc, width=60)
+        for j, line in enumerate(wrapped_desc):
+            surf = subtitle_font.render(line, True, WHITE)
+            rect = surf.get_rect(center=(screen_width//2, y_offset + 160 + j*40))
+            screen.blit(surf, rect)
+
+        # Texte rigolo (wrap automatique)
+        jokes = [
+            "Elles viennes de la Lune Fromagère... et elles sont affamées !",
+            "Une fuite nucléaire a réveillé leur appétit galactique.",
+            "La langue pendante et les crocs acérés prêts à bouffer !",
+        ]
+        wrapped_joke = textwrap.wrap(jokes[level_idx], width=50)
+        for k, line in enumerate(wrapped_joke):
+            surf = subtitle_font.render(line, True, WHITE)
+            rect = surf.get_rect(center=(screen_width//2, y_offset + 240 + k*40))
+            screen.blit(surf, rect)
+
+        # Poursuivre
+        cont_surf = score_font.render("Press C to continue", True, GREEN)
+        cont_rect = cont_surf.get_rect(center=(screen_width//2, screen_height - 50))
+        screen.blit(cont_surf, cont_rect)
         pygame.display.flip()
         continue
 
+    # === Écran REWARD (Bouclier acquis) ===
+    if game_state == "REWARD":
+        # Fond étoilé
+        screen.fill(BLACK)
+        for star in star_list:
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        for planet in planet_list:
+            pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+        # Texte de récompense
+        text = score_font.render("Bouclier acquis !", True, CYAN)
+        rect = text.get_rect(center=(screen_width//2, screen_height//2 - 50))
+        screen.blit(text, rect)
+        # Cercle bouclier
+        pygame.draw.circle(screen, CYAN, (screen_width//2, screen_height//2 + 10), 50, 4)
+        # Petite tête d'AstroPaws
+        small = pygame.transform.scale(astro_sprite_right, (40, 40))
+        srect = small.get_rect(center=(screen_width//2, screen_height//2 + 10))
+        screen.blit(small, srect)
+        # Informations sur le bouclier
+        info1 = score_font.render("Appuyez sur H pour activer le bouclier", True, WHITE)
+        info1_rect = info1.get_rect(center=(screen_width//2, screen_height//2 + 80))
+        screen.blit(info1, info1_rect)
+        info2 = score_font.render(f"Durée: {shield_duration//1000}s   Utilisations: 1", True, WHITE)
+        info2_rect = info2.get_rect(center=(screen_width//2, screen_height//2 + 120))
+        screen.blit(info2, info2_rect)
+        pygame.display.flip()
+        pygame.time.delay(2000)
+        # Octroi de la charge de bouclier
+        shield_charges = 1
+        shield_last_granted_time = now
+        reward_shown = True
+        shield_inv_anim['active'] = True
+        shield_inv_anim['start'] = now
+        game_state = "PLAYING"
+        continue
     # === Écran PAUSE ===
     if game_state == "PAUSE":
         # Gestion des événements pour reprendre ou quitter
@@ -304,6 +641,8 @@ while running:
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
+                    paused_time_accum += now - pause_start_time
+                    pause_start_time = None
                     game_state = "PLAYING"
                 elif event.key == pygame.K_q:
                     running = False
@@ -317,10 +656,30 @@ while running:
         # Stats en pause
         score_surface = score_font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_surface, (10, 10))
-        water_surface = score_font.render(f"Water: {water_ammo}", True, WHITE)
-        screen.blit(water_surface, (10, 50))
-        lives_surface = score_font.render(f"Lives: {lives}", True, WHITE)
-        screen.blit(lives_surface, (10, 90))
+        # Afficher la quantité d'eau avec icône
+        screen.blit(water_sprite, (10, 50))
+        water_count = score_font.render(f"x{water_ammo}", True, WHITE)
+        screen.blit(water_count, (10 + water_sprite.get_width() + 10, 50 + (water_sprite.get_height() - water_count.get_height())//2))
+        # Afficher les vies sous forme de cœurs
+        for i in range(lives):
+            hx = 10 + i * (heart_sprite.get_width() + 5)
+            hy = 50 + water_sprite.get_height() + 10
+            screen.blit(heart_sprite, (hx, hy))
+        # Inventaire en pause : icônes + compteurs
+        inv_x = 10
+        inv_y = 130
+        # Bouclier
+        screen.blit(shield_icon, (inv_x, inv_y))
+        shield_count = score_font.render(f"x{shield_charges}", True, WHITE)
+        screen.blit(shield_count, (inv_x + shield_icon.get_width() + 10, inv_y + 12))
+        # Hyperdrive
+        screen.blit(hyper_icon, (inv_x + 120, inv_y))
+        hyper_count = score_font.render(f"x{hyper_charges}", True, WHITE)
+        screen.blit(hyper_count, (inv_x + 120 + hyper_icon.get_width() + 10, inv_y + 12))
+        # Ingrédients
+        screen.blit(ingredient_icon, (inv_x + 240, inv_y))
+        ing_count = score_font.render(f"x{len(ingredients_collected)}", True, WHITE)
+        screen.blit(ing_count, (inv_x + 240 + ingredient_icon.get_width() + 10, inv_y + 12))
         # Titre PAUSE clignotant
         if pause_blink:
             pause_surf = score_font.render("PAUSE", True, WHITE)
@@ -331,7 +690,8 @@ while running:
         resume_rect = resume_surf.get_rect(center=(screen_width//2, screen_height//2))
         screen.blit(resume_surf, resume_rect)
         quit_surf = score_font.render("Press Q to quit", True, RED)
-        quit_rect = quit_surf.get_rect(center=(screen_width//2, screen_height*2//3))
+        # Placer le texte "Quit" juste sous "Resume"
+        quit_rect = quit_surf.get_rect(center=(screen_width//2, screen_height//2 + 60))
         screen.blit(quit_surf, quit_rect)
         # Afficher le chat endormi en bas de l'écran de pause
         chat_rect = chat_sleep_image.get_rect(midbottom=(screen_width//2, screen_height - 10))
@@ -396,8 +756,14 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_p:
+                pause_start_time = now
                 game_state = "PAUSE"
                 break
+            if event.key == pygame.K_h and shield_charges > 0 and not shield_active:
+                shield_active = True
+                shield_start_time = now
+                shield_charges -= 1
+                create_explosion(astro_x + 40, astro_y + 40, color=BLUE, num_particles=20)
             if event.key == pygame.K_SPACE:
                 current_time = pygame.time.get_ticks()
                 if current_time >= next_shot_allowed_time and water_ammo > 0:
@@ -414,7 +780,19 @@ while running:
                     if keys[pygame.K_DOWN]:
                         dy += 1
                     if dx == 0 and dy == 0:
-                        dy = -1  # par défaut, tirer vers le haut
+                        # Tirer dans la dernière direction de déplacement
+                        if astro_facing == "left":
+                            dx = -bullet_speed
+                            dy = 0
+                        elif astro_facing == "right":
+                            dx = bullet_speed
+                            dy = 0
+                        elif astro_facing == "up":
+                            dx = 0
+                            dy = -bullet_speed
+                        else:  # "down"
+                            dx = 0
+                            dy = bullet_speed
                     mag = math.sqrt(dx*dx + dy*dy)
                     dx = dx / mag * bullet_speed
                     dy = dy / mag * bullet_speed
@@ -474,51 +852,40 @@ while running:
             planet['x'] = 0
             planet['y'] = random.randint(0, screen_height)
 
-    # Spawn d'ennemis
-    if random.random() < 0.02:  # 2% de chance par frame
+    # Spawn d'ennemis selon configuration du niveau
+    level_conf = levels.levels[level_idx]
+    spawn_chance = 0.02
+    if random.random() < spawn_chance:
+        # Choisir le type en fonction des poids du niveau
+        spawn_weights = level_conf['spawn_weights']
+        enemy_type = random.choices(
+            population=list(spawn_weights.keys()),
+            weights=list(spawn_weights.values())
+        )[0]
+        # Propriétés selon le type
+        if enemy_type == 'dog':
+            enemy_width, enemy_height, enemy_speed, enemy_health = 50, 50, 2, 3
+        elif enemy_type == 'rat':
+            enemy_width, enemy_height, enemy_speed, enemy_health = 30, 30, 3, 1  # rat tué en 1 jet
+        else:  # 'mouse'
+            enemy_width, enemy_height, enemy_speed, enemy_health = 20, 20, 4, 1
+        # Déterminer le côté d'apparition
         side = random.choice(['left', 'right', 'top', 'bottom'])
-        r = random.random()
-        if r < 0.15:
-            enemy_type = "dog"
-            enemy_width = 50
-            enemy_height = 50
-            enemy_speed = 2
-            enemy_health = 3
-        elif r < 0.5:
-            enemy_type = "rat"
-            enemy_width = 30
-            enemy_height = 30
-            enemy_speed = 3
-            enemy_health = 2
-        else:
-            enemy_type = "mouse"
-            enemy_width = 20
-            enemy_height = 20
-            enemy_speed = 4
-            enemy_health = 1
         if side == 'left':
-            x = -enemy_width
-            y = random.randint(0, screen_height - enemy_height)
-            dx = enemy_speed  # se dirige vers la droite
-            dy = 0
+            x, y, dx, dy = -enemy_width, random.randint(0, screen_height - enemy_height), enemy_speed, 0
         elif side == 'right':
-            x = screen_width
-            y = random.randint(0, screen_height - enemy_height)
-            dx = -enemy_speed  # se dirige vers la gauche
-            dy = 0
+            x, y, dx, dy = screen_width, random.randint(0, screen_height - enemy_height), -enemy_speed, 0
         elif side == 'top':
-            x = random.randint(0, screen_width - enemy_width)
-            y = -enemy_height
-            dx = 0
-            dy = enemy_speed  # se dirige vers le bas
-        elif side == 'bottom':
-            x = random.randint(0, screen_width - enemy_width)
-            y = screen_height
-            dx = 0
-            dy = -enemy_speed  # se dirige vers le haut
-        enemy_list.append({'x': x, 'y': y, 'width': enemy_width, 'height': enemy_height,
-                           'type': enemy_type, 'dx': dx, 'dy': dy, 'speed': enemy_speed, 'health': enemy_health,
-                           'bob_phase': random.uniform(0, 2 * math.pi)})
+            x, y, dx, dy = random.randint(0, screen_width - enemy_width), -enemy_height, 0, enemy_speed
+        else:  # 'bottom'
+            x, y, dx, dy = random.randint(0, screen_width - enemy_width), screen_height, 0, -enemy_speed
+        # Ajouter l'ennemi
+        enemy_list.append({
+            'x': x, 'y': y, 'width': enemy_width, 'height': enemy_height,
+            'type': enemy_type, 'dx': dx, 'dy': dy,
+            'speed': enemy_speed, 'health': enemy_health,
+            'bob_phase': random.uniform(0, 2 * math.pi)
+        })
     # Mise à jour des ennemis
     new_enemy_list = []
     for enemy in enemy_list:
@@ -562,8 +929,21 @@ while running:
         enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy['width'], enemy['height'])
         player_rect = pygame.Rect(astro_x, astro_y, 50, 50)
         if player_rect.colliderect(enemy_rect):
+            # Bouclier actif : élimination sans malus
+            if shield_active:
+                create_explosion(enemy['x'] + enemy['width']//2, enemy['y'] + enemy['height']//2, color=CYAN, num_particles=20)
+                enemy_list.remove(enemy)
+                continue
             if enemy['type'] == "dog":
                 lives -= 1
+                # Déclencher explosion du cœur retiré
+                life_anim['active'] = True
+                life_anim['index'] = lives  # index du cœur supprimé
+                life_anim['start'] = pygame.time.get_ticks()
+                # Explosion visuelle sur le cœur
+                heart_x = screen_width - (heart_sprite.get_width() + 10) * (life_anim['index'] + 1) + heart_sprite.get_width()//2
+                heart_y = 10 + heart_sprite.get_height()//2
+                create_explosion(heart_x, heart_y, color=RED, num_particles=30)
                 create_explosion(astro_x + 25, astro_y + 25, color=(255, 0, 0), num_particles=50)
                 lost_life_surface = score_font.render("Vous avez perdu une vie!", True, WHITE)
                 screen.blit(lost_life_surface, (screen_width//2 - 100, screen_height//2))
@@ -605,12 +985,99 @@ while running:
         croquette_rect = pygame.Rect(croquette['x'], croquette['y'], croquette_size, croquette_size)
         if player_rect.colliderect(croquette_rect):
             if croquette.get('type') == "rare":
-                score += 5
+                score += 10  # croquette rare désormais 10 points
             else:
-                score += 1
+                score += 3   # croquette normale désormais 3 points
         else:
             new_croquette_list.append(croquette)
     croquette_list = new_croquette_list
+
+    # Vérifier si on atteint le score cible du niveau
+    target = levels.levels[level_idx]['target_score']
+    if score >= target:
+        # Animation de disparition du sprite mort sur 2 secondes
+        # Préparez le message statique
+        msg = score_font.render(f"{levels.levels[level_idx]['name']} terminé !", True, WHITE)
+        msg_rect = msg.get_rect(center=(screen_width//2, screen_height//2 + 50))
+        # Choisir le sprite mort
+        if level_idx == 0:
+            dead = mouse_dead_sprite
+        elif level_idx == 1:
+            dead = rat_dead_sprite
+        else:
+            dead = dog_dead_sprite
+        # Animation
+        anim_start = pygame.time.get_ticks()
+        anim_duration = 2000  # ms
+        while True:
+            t = pygame.time.get_ticks() - anim_start
+            if t >= anim_duration:
+                break
+            progress = t / anim_duration
+            # Calculer la taille et l'alpha
+            scale = 1.0 - 0.5 * progress
+            w = max(1, int(dead.get_width() * scale))
+            h = max(1, int(dead.get_height() * scale))
+            anim_img = pygame.transform.scale(dead, (w, h))
+            anim_img.set_alpha(int(255 * (1 - progress)))
+            # Dessiner fond et sprite animé
+            screen.fill(BLACK)
+            # étoiles de fond
+            for star in star_list:
+                pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+            for planet in planet_list:
+                pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+            # sprite mort animé
+            rect = anim_img.get_rect(center=(screen_width//2, screen_height//2 - 50))
+            screen.blit(anim_img, rect)
+            # message
+            screen.blit(msg, msg_rect)
+            pygame.display.flip()
+            clock.tick(60)
+        # Récompense : ajouter l'ingrédient du niveau
+        ingredients_collected.append(levels.levels[level_idx]['end_item'])
+        # Passer au niveau suivant si existant
+        if level_idx < len(levels.levels) - 1:
+            level_idx += 1
+        # Réinitialiser l'état du jeu pour le prochain niveau
+        enemy_list.clear()
+        croquette_list.clear()
+        water_item_list.clear()
+        game_start_time = None
+        # Passer à l'écran de victoire de niveau
+        game_state = "LEVEL_WIN"
+        level_win_start_time = now
+        continue
+    # === Écran LEVEL_WIN ===
+    if game_state == "LEVEL_WIN":
+        # Affichage du même écran de victoire
+        screen.fill(BLACK)
+        for star in star_list:
+            pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
+        for planet in planet_list:
+            pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+        win_msg = score_font.render("Vous avez passé le niveau !", True, WHITE)
+        win_rect = win_msg.get_rect(center=(screen_width//2, 60))
+        screen.blit(win_msg, win_rect)
+        yw_rect = youwin_image.get_rect(center=(screen_width//2, screen_height//2))
+        screen.blit(youwin_image, yw_rect)
+        next_name = levels.levels[level_idx]['name'] if level_idx < len(levels.levels) else "Fin du jeu"
+        sub_surf = score_font.render(f"Prochain : {next_name}", True, WHITE)
+        sub_rect = sub_surf.get_rect(center=(screen_width//2, screen_height//2 + 140))
+        screen.blit(sub_surf, sub_rect)
+        cont_surf = score_font.render("(Patientez...)", True, GREEN)
+        cont_rect = cont_surf.get_rect(center=(screen_width//2, screen_height - 50))
+        screen.blit(cont_surf, cont_rect)
+        pygame.display.flip()
+        # Transition automatique après 5 secondes
+        if level_win_start_time is not None and now - level_win_start_time >= 5000:
+            game_state = "LEVEL_INTRO"
+        else:
+            # Permettre de quitter la fenêtre
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+        continue
 
     # Mise à jour des réserves d'eau (water items)
     current_time = pygame.time.get_ticks()
@@ -624,6 +1091,9 @@ while running:
         water_rect = pygame.Rect(item['x'], item['y'], width, height)
         if player_rect.colliderect(water_rect):
             water_ammo += 10
+            # Déclencher clignotement du compteur d'eau
+            water_anim['active'] = True
+            water_anim['start'] = pygame.time.get_ticks()
             water_item_list.remove(item)
     
     # Apparition de nouvelles réserves d'eau
@@ -643,14 +1113,45 @@ while running:
             new_explosion_list.append(particle)
     explosion_list = new_explosion_list
 
-    # Affichage du fond spatial procédural
-    screen.fill(BLACK)
+    # Mettre à jour animations de score et d'eau
+    now = pygame.time.get_ticks()
+    # Score blink si négatif
+    if score < 0:
+        if now - score_blink_time > 500:
+            score_blink = not score_blink
+            score_blink_time = now
+    else:
+        score_blink = False
+    # Arrêter animation eau
+    if water_anim['active'] and now - water_anim['start'] > water_anim['duration']:
+        water_anim['active'] = False
+    # Arrêter animation inventaire bouclier
+    if shield_inv_anim['active'] and now - shield_inv_anim['start'] > shield_inv_anim['duration']:
+        shield_inv_anim['active'] = False
+
+    # Affichage du fond spatial procédural avec teinte de niveau
+    bg = levels.levels[level_idx]['bg_tint']
+    screen.fill(bg)
+    # Chronomètre mm:ss en haut-centre
+    if game_start_time is not None:
+        elapsed = (now - game_start_time - paused_time_accum) // 1000
+        mins, secs = divmod(elapsed, 60)
+        timer_surf = score_font.render(f"{mins:02d}:{secs:02d}", True, WHITE)
+        timer_rect = timer_surf.get_rect(midtop=(screen_width//2, 10))
+        screen.blit(timer_surf, timer_rect)
     # Dessiner les étoiles
     for star in star_list:
         pygame.draw.circle(screen, WHITE, (int(star['x']), int(star['y'])), 1)
     # Dessiner les planètes
     for planet in planet_list:
         pygame.draw.circle(screen, planet['color'], (int(planet['x']), int(planet['y'])), planet['size'])
+
+    # Mettre à jour et dessiner les OVNIs décoratifs
+    for ufo in ufo_list:
+        ufo.update()
+    for ufo in ufo_list:
+        ufo.draw()
+
     # Dessiner les croquettes avec sprites
     for croquette in croquette_list:
         if croquette.get('type') == "rare":
@@ -690,18 +1191,70 @@ while running:
         screen.blit(astro_sprite_up, (astro_x, astro_y))
     else:  # "down"
         screen.blit(astro_sprite_down, (astro_x, astro_y))
+    # Dessiner un cercle de bouclier autour d'AstroPaws si actif
+    if shield_active:
+        # Déterminer le centre du sprite
+        sprite_w = astro_sprite_right.get_width()
+        sprite_h = astro_sprite_right.get_height()
+        center_x = astro_x + sprite_w // 2
+        center_y = astro_y + sprite_h // 2
+        # Rayon légèrement supérieur à la moitié du sprite
+        radius = max(sprite_w, sprite_h) // 2 + 5
+        # Tracer un cercle en CYAN d'épaisseur 3 px
+        pygame.draw.circle(screen, CYAN, (center_x, center_y), radius, 3)
     
-    # Afficher le score et les vies
-    score_surface = score_font.render("Score: " + str(score), True, WHITE)
+    # Afficher Score (clignote en rouge si score négatif)
+    score_color = RED if (score < 0 and score_blink) else WHITE
+    score_surface = score_font.render(f"Score: {score}", True, score_color)
     screen.blit(score_surface, (10, 10))
+    # Afficher eau (clignote en bleu lors de collecte)
+    water_color = BLUE if water_anim['active'] else WHITE
+    water_surface = score_font.render(f"Water: {water_ammo}", True, water_color)
+    screen.blit(water_surface, (10, 50))
     # Afficher les vies sous forme de cœurs en haut à droite
     for i in range(lives):
-         screen.blit(heart_sprite, (screen_width - (heart_sprite.get_width() + 10) * (i + 1), 10))
-    # Afficher le score, l'eau et les vies
-    score_surface = score_font.render("Score: " + str(score), True, WHITE)
-    screen.blit(score_surface, (10, 10))
-    water_surface = score_font.render("Water: " + str(water_ammo), True, WHITE)
-    screen.blit(water_surface, (10, 50))
+        x = screen_width - (heart_sprite.get_width() + 10) * (i + 1)
+        screen.blit(heart_sprite, (x, 10))
+    # Barre de bouclier si actif
+    if shield_active:
+        remaining = shield_duration - (now - shield_start_time)
+        ratio = max(0, remaining) / shield_duration
+        bw, bh = 200, 10
+        bx, by = screen_width//2 - bw//2, 70
+        pygame.draw.rect(screen, WHITE, (bx, by, bw, bh), 2)
+        pygame.draw.rect(screen, BLUE, (bx, by, int(bw * ratio), bh))
+        if remaining <= 0:
+            shield_active = False
+
+    # Affichage de l'inventaire en bas à gauche (icônes + compteurs)
+    x0 = 10
+    # Positionner l'inventaire 10px au-dessus du bord inférieur, en fonction de la hauteur de l'icône
+    y0 = screen_height - shield_icon.get_height() - 10
+
+    # Bouclier
+    screen.blit(shield_icon, (x0, y0))
+    # Clignotement du compteur de bouclier
+    shield_color = CYAN if shield_inv_anim['active'] and ((now - shield_inv_anim['start']) // 250) % 2 == 0 else WHITE
+    shield_count = score_font.render(f"x{shield_charges}", True, shield_color)
+    # Position dynamique à droite de l'icône
+    screen.blit(shield_count, (x0 + shield_icon.get_width() + 10, y0 + 4))
+
+    # Hyperdrive
+    screen.blit(hyper_icon, (x0 + 100, y0))
+    hyper_count = score_font.render(f"x{hyper_charges}", True, WHITE)
+    # Position dynamique à droite de l'icône
+    screen.blit(hyper_count, (x0 + 100 + hyper_icon.get_width() + 10, y0 + 4))
+
+    # Ingrédients
+    screen.blit(ingredient_icon, (x0 + 200, y0))
+    ing_count = score_font.render(f"x{len(ingredients_collected)}", True, WHITE)
+    # Position dynamique à droite de l'icône
+    screen.blit(ing_count, (x0 + 200 + ingredient_icon.get_width() + 10, y0 + 4))
+
+    # Afficher le numéro de niveau en bas à droite
+    lvl_surf = score_font.render(f"Level {level_idx+1}", True, WHITE)
+    lvl_rect = lvl_surf.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+    screen.blit(lvl_surf, lvl_rect)
 
     # Actualiser l'affichage
     pygame.display.flip()
