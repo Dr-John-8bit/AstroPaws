@@ -184,6 +184,43 @@ Les ennemis apparaissent aléatoirement sur les bords de l’écran et se dépla
 
 ---
 
+
+## ✨ Nouvelles fonctionnalités visuelles et de niveau
+
+### 1. Écran INFO repensé
+- Nouveau sous-menu accessible par la touche `I` (retour avec `SPACE`).
+- Fond uni pour une meilleure lisibilité.
+- Icônes placées à gauche, texte explicatif à droite (eau, vies, bouclier, hyperdrive, croquettes, ennemis…).
+- Avatar animé (Dr Chat) avec effet de rotation sinusoïdale.
+- Touche `H` pour le bouclier, `J` pour l’hyperdrive.
+
+### 2. Transitions de niveaux dynamiques
+- Ajout de l’état `LEVEL_WIN` avec image `youwin.png`.
+- Après la fin d’un niveau, un écran de transition s’affiche pendant 5 secondes avant le niveau suivant.
+
+### 3. Tunnel d’étoiles et flash blanc
+- Chaque début de niveau déclenche un effet warp avec 30 itérations d’étoiles plus lentes/denses.
+- Un flash blanc final conclut la transition.
+- Réinitialisation du fond spatial pour le nouveau niveau.
+
+### 4. Écran d’intro de niveau
+- Titre simplifié : “Niveau X” en haut de l’écran.
+- Affichage de “AstroPaws VS Ennemis” avec sprites animés (hochs de tête, pulsations).
+- Texte narratif et humoristique wrapé automatiquement (police plus petite).
+
+### 5. Animation de l’ennemi vaincu
+- Lorsqu’un niveau se termine, le sprite de l’ennemi est grossi, puis rétrécit et disparaît en 2 secondes.
+
+### 6. Teintes de fond dynamiques
+- Mise à jour automatique de la teinte (`bg_tint`) dans `levels.py` :
+  - Niveau 1 → bleu foncé (10, 10, 50)
+  - Niveau 2 → bleu clair (30, 30, 100)
+  - Niveau 3 → noir (0, 0, 0)
+
+### 7. Amélioration du `Story screen`
+- Réduction du wrapping à 40 caractères pour éviter le débordement.
+- Réinitialisation de `story_scroll_y` pour recentrer le texte dans la fenêtre.
+
 ## 🚀 Feuille de route mise à jour
 
 ### 1. Musique et effets sonores 8-bit

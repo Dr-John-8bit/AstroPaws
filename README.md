@@ -9,6 +9,7 @@
 - [Fonctionnalités](#fonctionnalités)
 - [Synopsis du jeu](#synopsis-du-jeu)
 - [Contrôles du jeu](#contrôles-du-jeu)
+- [Mode d'emploi](#mode-demploi)
 - [Développement en cours](#développement-en-cours)
 - [Roadmap à court terme](#roadmap-à-court-terme)
 - [Installation](#installation)
@@ -47,6 +48,12 @@ Bienvenue dans **AstroPaws: Gourmet Quest**.
 - Flèches du clavier : déplacer AstroPaws dans l’espace.
 - Barre espace : tirer un jet d’eau vers l’avant.
 - Flèche directionnelle + espace : tirer un jet d’eau dans la direction choisie.
+
+## 📘 Mode d'emploi
+
+Un manuel complet est disponible pour découvrir l’univers, les objectifs, les commandes et les ennemis du jeu.
+
+➡️ [Lire le mode d’emploi officiel](MANUAL.md)
 
 Tout cela est en cours d’élaboration et le jeu va évoluer rapidement, avec des nouveautés prévues chaque semaine.
 
@@ -89,34 +96,36 @@ Tout le développement est disponible en ligne en toute transparence pour partag
 
 🚀 **Feuille de route à venir :**
 
-1. **Musique et effets sonores 8-bit**
-   - Charger et jouer des fichiers .ogg (boucle de fond + effets : tir, explosion, collecte).
-   - Menu Options pour régler volume musique / effets.
+1. **Intégration Audio**
+   - Charger et jouer les musiques `.ogg` : `menu_theme.ogg`, `gameplay_loop.ogg`, `boss_theme.ogg`, `game_over.ogg`, `pause_jingle.ogg`.
+   - Intégrer les effets sonores : tir, explosion, collecte, menus, pause.
+   - Créer un sous-menu Options pour régler les volumes musique / SFX.
 
-2. **Animation des sprites**
-   - AstroPaws : orientation selon la direction (flip ou sprites dédiés).
-   - Ennemis : remplacement des rectangles par des sprites pixel art, avec animation.
+2. **Hyperdrive et animations**
+   - Implémenter la touche **J** pour déclencher l’hyperdrive (impulsion + protection temporaire).
+   - Ajouter une **barre de recharge** et une **traînée visuelle** lors de l’activation.
+   - Visuel : icône éclair jaune, bouclier or épais.
 
-3. **Écran d’accueil et sous-menus**
-   - Ajouter un sous-menu Options (volume, contrôles).
-   - Améliorer les transitions entre écrans (fondu, balayage…).
+3. **Boss & niveaux supplémentaires**
+   - Ajout d’un premier boss (sprites, barre de vie, musique dédiée).
+   - Création de plusieurs niveaux scénarisés avec ambiance propre (secteurs galactiques, planètes, etc.).
 
-4. **Boss et niveaux**
-   - Ajouter un ou plusieurs boss finaux avec mécaniques uniques.
-   - Créer plusieurs zones/niveaux (champs d’astéroïdes, nébuleuses, etc.).
+4. **Sprites animés**
+   - Ajout d’animations pour AstroPaws (clignement, flottement).
+   - Animation des ennemis (2–3 frames, pulsation, déplacement).
 
 5. **Mini-carte & HUD avancé**
-   - Implémenter une mini-carte indiquant la position d’AstroPaws et des ennemis.
-   - Afficher des indicateurs de progression ou barres de santé des boss.
+   - Implémenter une mini-carte simplifiée avec position d’AstroPaws et des ennemis.
+   - Afficher des indicateurs de progression, barre de vie du boss.
 
-6. **Polish et équilibrage**
-   - Ajuster fréquences d’apparition, vitesses, coût en eau, points.
-   - Corriger les éventuels bugs de collision ou de logique.
+6. **Polish & high-scores**
+   - Rééquilibrage général : spawn, vitesses, coûts en eau, récompenses.
+   - Hitboxes affinées, optimisation des performances.
+   - Système d’enregistrement et d’affichage des meilleurs scores.
 
-7. **Fonctionnalités supplémentaires**
-   - Sauvegarde et gestion des high-scores.
-   - Support manette.
-   - Écrans de victoire et crédits de fin.
+7. **Support manette & contrôles reconfigurables**
+   - Intégration des manettes via `pygame.joystick`.
+   - Ajout d’un système de personnalisation des touches dans le menu Options.
 
 💾 **Installation :**
 
