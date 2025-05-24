@@ -75,6 +75,7 @@ Tout le développement est disponible en ligne en toute transparence pour partag
    - Score : collecte de croquettes normales (+1) et rares (+5).
    - Eau : réservoir initial à 50 L, chaque tir en consomme 1 L, recharge de +10 L via des réserves d’eau aléatoires.
    - Vies : 9 vies représentées par des cœurs en haut à droite ; perte d’une vie au contact d’un chien.
+   - Ingrédients sacrés : affichage graphique dans le HUD et l’écran de pause, avec icônes spécifiques, zoom sur l’ingrédient acquis, clignotement collectif.
 
 3. **Ennemis avec santé**
    - Trois types d’ennemis (souris, rats, chiens) avec 1–2–3 tirs nécessaires pour les éliminer.

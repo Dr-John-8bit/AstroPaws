@@ -88,6 +88,18 @@ Chaque ennemi possède une **santé** (health) qui détermine le nombre de tirs 
 - **Durée de vie** : 7 secondes.
 - **Collecte** : Lorsqu’AstroPaws collecte une réserve d’eau (représentée par un petit carré bleu clair de 10×10 pixels), la variable `water_ammo` augmente de **10 litres**.
 
+### Ingrédients sacrés
+- **Sprites chargés** : `ingredient_poulet.png`, `ingredient_thon.png`, `ingredient_carotte.png`, `ingredient_fragment_croquette.png`
+- **Mapping** : dictionnaire `ingredient_sprites` pour associer chaque nom à son image.
+- **HUD en jeu** :
+  - Affichage permanent de l’icône `ingredient_icon` en bas à gauche.
+  - À chaque passage de niveau, un nouveau sprite s’ajoute à droite de l’icône pour représenter l’ingrédient collecté.
+  - Une mini-animation de **zoom sinusoidal** est appliquée sur le dernier ingrédient collecté (amplitude doublée, durée de 1,5 s).
+- **Écran de pause** :
+  - Remplacement du compteur texte `xN` par un affichage graphique : icône générique suivie des sprites d’ingrédients.
+  - Animation de clignotement global toutes les 0,5 s sur la ligne d’ingrédients collectés.
+- **Flux simplifié** : suppression de l’écran intermédiaire “nouvel ingrédient” ; retour direct à l’intro du niveau suivant.
+
 ---
 
 ## 6. Les ennemis

@@ -232,8 +232,27 @@ shield_icon = pygame.image.load("images/shield_icon.png").convert_alpha()
 shield_icon = pygame.transform.scale(shield_icon, (48, 48))
 hyper_icon  = pygame.image.load("images/hyper_icon.png").convert_alpha()
 hyper_icon  = pygame.transform.scale(hyper_icon,  (48, 48))
+
 ingredient_icon = pygame.image.load("images/ingredient_icon.png").convert_alpha()
 ingredient_icon = pygame.transform.scale(ingredient_icon, (48, 48))
+
+# Sprites spécifiques des ingrédients
+poulet_sprite   = pygame.image.load("images/ingredient_poulet.png").convert_alpha()
+poulet_sprite   = pygame.transform.scale(poulet_sprite, (48, 48))
+thon_sprite     = pygame.image.load("images/ingredient_thon.png").convert_alpha()
+thon_sprite     = pygame.transform.scale(thon_sprite, (48, 48))
+carotte_sprite  = pygame.image.load("images/ingredient_carotte.png").convert_alpha()
+carotte_sprite  = pygame.transform.scale(carotte_sprite, (48, 48))
+fragment_sprite = pygame.image.load("images/ingredient_fragment_croquette.png").convert_alpha()
+fragment_sprite = pygame.transform.scale(fragment_sprite, (48, 48))
+
+# Mapping clé → sprite pour l’inventaire
+ingredient_sprites = {
+    'ingredient_poulet': poulet_sprite,
+    'ingredient_thon': thon_sprite,
+    'ingredient_carotte': carotte_sprite,
+    'ingredient_fragment_croquette': fragment_sprite,
+}
 
 # Position initiale d'AstroPaws
 astro_x = screen_width // 2
@@ -326,6 +345,9 @@ shield_cooldown = 30000         # 30 secondes de recharge
 shield_inv_anim = {'active': False, 'start': 0, 'duration': 1000}  # 1 seconde
 hyper_charges = 0               # charges d'hyperespace
 ingredients_collected = []      # liste des ingrédients collectés
+ing_anim_active = False  # indique qu'un nouvel ingrédient doit être animé
+ing_anim_start = 0       # timestamp du début de l'animation
+ing_anim_duration = 1500  # durée de l'animation en ms
 paused_time_accum = 0       # temps total passé en pause (ms)
 pause_start_time = None     # timestamp du début de la pause
 level_win_start_time = None  # timestamp du début de l'écran LEVEL_WIN
@@ -680,10 +702,18 @@ while running:
         screen.blit(hyper_icon, (inv_x + 120, inv_y))
         hyper_count = score_font.render(f"x{hyper_charges}", True, WHITE)
         screen.blit(hyper_count, (inv_x + 120 + hyper_icon.get_width() + 10, inv_y + 12))
-        # Ingrédients
-        screen.blit(ingredient_icon, (inv_x + 240, inv_y))
-        ing_count = score_font.render(f"x{len(ingredients_collected)}", True, WHITE)
-        screen.blit(ing_count, (inv_x + 240 + ingredient_icon.get_width() + 10, inv_y + 12))
+        # Ingrédients collectés : icône générique + sprites spécifiques clignotants
+        base_x = inv_x + 240
+        screen.blit(ingredient_icon, (base_x, inv_y))
+        offset_x = base_x + ingredient_icon.get_width() + 10
+        # Clignotement à 500ms
+        blink_on = ((now // 500) % 2) == 0
+        for idx, ing_key in enumerate(ingredients_collected):
+            if not blink_on:
+                break  # tout clignote ensemble, on peut stopper si off
+            ing_sprite = ingredient_sprites.get(ing_key, ingredient_icon)
+            x = offset_x + idx * (ing_sprite.get_width() + 10)
+            screen.blit(ing_sprite, (x, inv_y))
         # Titre PAUSE clignotant
         if pause_blink:
             pause_surf = score_font.render("PAUSE", True, WHITE)
@@ -1046,19 +1076,18 @@ while running:
             screen.blit(msg, msg_rect)
             pygame.display.flip()
             clock.tick(60)
-        # Récompense : ajouter l'ingrédient du niveau
+        # Animer l'ajout de l'ingrédient
         ingredients_collected.append(levels.levels[level_idx]['end_item'])
-        # Passer au niveau suivant si existant
+        ing_anim_active = True
+        ing_anim_start = now
+        # Mettre à jour l'inventaire et passer directement à l'intro du niveau suivant
         if level_idx < len(levels.levels) - 1:
             level_idx += 1
-        # Réinitialiser l'état du jeu pour le prochain niveau
         enemy_list.clear()
         croquette_list.clear()
         water_item_list.clear()
         game_start_time = None
-        # Passer à l'écran de victoire de niveau
-        game_state = "LEVEL_WIN"
-        level_win_start_time = now
+        game_state = "LEVEL_INTRO"
         continue
     # === Écran LEVEL_WIN ===
     if game_state == "LEVEL_WIN":
@@ -1257,11 +1286,30 @@ while running:
     # Position dynamique à droite de l'icône
     screen.blit(hyper_count, (x0 + 100 + hyper_icon.get_width() + 10, y0 + 4))
 
-    # Ingrédients
-    screen.blit(ingredient_icon, (x0 + 200, y0))
-    ing_count = score_font.render(f"x{len(ingredients_collected)}", True, WHITE)
-    # Position dynamique à droite de l'icône
-    screen.blit(ing_count, (x0 + 200 + ingredient_icon.get_width() + 10, y0 + 4))
+    # Icône générique d'ingrédient (toujours présente)
+    inv_base_x = x0 + 200
+    screen.blit(ingredient_icon, (inv_base_x, y0))
+    # Afficher les ingrédients collectés à droite de cette icône
+    offset_x = inv_base_x + ingredient_icon.get_width() + 10
+    for idx, ing_key in enumerate(ingredients_collected):
+        ing_sprite = ingredient_sprites.get(ing_key, ingredient_icon)
+        draw_sprite = ing_sprite
+        # Animation de zoom pour le dernier ingrédient acquis
+        if ing_anim_active and idx == len(ingredients_collected) - 1:
+            t = now - ing_anim_start
+            if t <= ing_anim_duration:
+                factor = 1 + 1.0 * math.sin(math.pi * t / ing_anim_duration)
+                w = int(ing_sprite.get_width() * factor)
+                h = int(ing_sprite.get_height() * factor)
+                draw_sprite = pygame.transform.scale(ing_sprite, (w, h))
+            else:
+                ing_anim_active = False
+        # Calculer position centrée
+        rect = draw_sprite.get_rect()
+        pos_x = offset_x + idx * (ing_sprite.get_width() + 10) + (ing_sprite.get_width() - rect.width) // 2
+        pos_y = y0 + (ing_sprite.get_height() - rect.height) // 2
+        rect.topleft = (pos_x, pos_y)
+        screen.blit(draw_sprite, rect)
 
     # Afficher le numéro de niveau en bas à droite
     lvl_surf = score_font.render(f"Level {level_idx+1}", True, WHITE)
