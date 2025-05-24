@@ -65,68 +65,75 @@ Tout le développement est disponible en ligne en toute transparence pour partag
 
 ## 🗺️ Roadmap à court terme :
 
-✅ **Fonctionnalités déjà implémentées :**
+### ✅ Terminés
 
-1. **Mouvements et tirs**
-   - Déplacement d’AstroPaws avec les flèches (4 directions + diagonales).
-   - Tir directionnel (haut/bas/gauche/droite) avec la barre Espace, limité par un cooldown (300 ms).
+#### Mécanique de base
+- Déplacements orthogonaux + diagonaux avec wrap-around
+- Tirs directionnels, gestion de l’eau, des croquettes et du score
+- Vies, explosions et conditions de game-over
 
-2. **Ressources et UI**
-   - Score : collecte de croquettes normales (+1) et rares (+5).
-   - Eau : réservoir initial à 50 L, chaque tir en consomme 1 L, recharge de +10 L via des réserves d’eau aléatoires.
-   - Vies : 9 vies représentées par des cœurs en haut à droite ; perte d’une vie au contact d’un chien.
-   - Ingrédients sacrés : affichage graphique dans le HUD et l’écran de pause, avec icônes spécifiques, zoom sur l’ingrédient acquis, clignotement collectif.
+#### Progression & niveaux
+- Structure `levels.py` (seuils 25/40/60, teintes de fond par niveau)
+- Transitions cinématiques (mort animée → ingrédients → intro niveau → warp)
+- HUD “Level X” en bas-droite
 
-3. **Ennemis avec santé**
-   - Trois types d’ennemis (souris, rats, chiens) avec 1–2–3 tirs nécessaires pour les éliminer.
-   - Récompenses à la destruction : +10 / +20 / +30 points.
-   - Pénalités en collision : –5 / –10 points (souris / rat), –1 vie (chien) + grosse explosion.
+#### Écrans & menus
+- Menu principal, Story (scrolling), Info (icônes + légendes animées), Pause, Game-Over
 
-4. **Décor et effets**
-   - Fond spatial procédural (étoiles + planètes colorées, effet parallaxe).
-   - Effets d’explosion (20 particules standard, 50 pour les chiens).
-
-5. **Menus et écrans**
-   - MENU : fond étoilé animé, image d’accueil redimensionnée, invites clignotantes (“PRESS SPACE TO START”, “PRESS S FOR STORY”, “PRESS Q TO QUIT”).
-   - STORY : texte défilant façon Star Wars, wrapping automatique, vitesse ralentie, retour automatique ou touche Espace / Échap.
-   - PLAYING : boucle de jeu active.
-   - PAUSE : touche P, écran noir avec statistiques (score, eau, vies), titre clignotant, options pour reprendre ou quitter, image du chat qui dort.
-   - GAME OVER : message “GAME OVER” à l’écran et fin de la partie.
+#### Ingrédients
+- Chargement et mapping des sprites réels (poulet, thon, carotte, fragment)
+- Affichage HUD & Pause : icône générique + icônes spécifiques, animations de zoom et clignotement
 
 ---
 
-🚀 **Feuille de route à venir :**
+### 🟡 Prochaines étapes critiques
 
-1. **Intégration Audio**
-   - Charger et jouer les musiques `.ogg` : `menu_theme.ogg`, `gameplay_loop.ogg`, `boss_theme.ogg`, `game_over.ogg`, `pause_jingle.ogg`.
-   - Intégrer les effets sonores : tir, explosion, collecte, menus, pause.
-   - Créer un sous-menu Options pour régler les volumes musique / SFX.
+#### Hyperdrive (dash)
+- Acquisition (icône à ramasser), compteur de charges, icône et HUD
+- Activation J : dash ×3 speed + invincibilité courte + particules + son
+- Recharge automatique (cooldown ~60 s) ou via item
 
-2. **Hyperdrive et animations**
-   - Implémenter la touche **J** pour déclencher l’hyperdrive (impulsion + protection temporaire).
-   - Ajouter une **barre de recharge** et une **traînée visuelle** lors de l’activation.
-   - Visuel : icône éclair jaune, bouclier or épais.
+#### Transformation “Super Chayen” & boss final
+- Activation (touche K ou déclenchement boss) : sprite spécial + aura, boost, invincibilité
+- Durée (3–5 s) et cooldown
+- Boss final “Impératrice Zibeline” : phases de combat, barre de vie, récompense ultime (4ᵉ ingrédient)
 
-3. **Boss & niveaux supplémentaires**
-   - Ajout d’un premier boss (sprites, barre de vie, musique dédiée).
-   - Création de plusieurs niveaux scénarisés avec ambiance propre (secteurs galactiques, planètes, etc.).
+#### Audio / Musique 8-bit
+- Boucles de fond (menu, niveaux 1→4, boss)
+- Jingles (intro niveau, victoire, warp, game-over)
+- SFX (tir eau, explosion, collecte, dash, pause, game-over)
 
-4. **Sprites animés**
-   - Ajout d’animations pour AstroPaws (clignement, flottement).
-   - Animation des ennemis (2–3 frames, pulsation, déplacement).
+#### Niveau 4 – Gameplay plateforme
+- Implémentation plateforme 2D (gravité, sauts, collision sol & plateformes)
+- Environnement spécifique, power-ups, pièges
+- Intro niv 4, transitions, HUD adapté
 
-5. **Mini-carte & HUD avancé**
-   - Implémenter une mini-carte simplifiée avec position d’AstroPaws et des ennemis.
-   - Afficher des indicateurs de progression, barre de vie du boss.
+---
 
-6. **Polish & high-scores**
-   - Rééquilibrage général : spawn, vitesses, coûts en eau, récompenses.
-   - Hitboxes affinées, optimisation des performances.
-   - Système d’enregistrement et d’affichage des meilleurs scores.
+### 🟢 Polish & extensions
 
-7. **Support manette & contrôles reconfigurables**
-   - Intégration des manettes via `pygame.joystick`.
-   - Ajout d’un système de personnalisation des touches dans le menu Options.
+#### Inertie & mouvement fluide
+- Remplacer le déplacement “à vitesse fixe” par un modèle (vx, vy) + accélération/friction
+- Sensation de glisse et d’élan
+
+#### Effet de gravité planétaire
+- Lorsqu’une planète s’approche (< seuil), appliquer une force gravitationnelle simple
+- Limiter aux planètes les plus proches ou à une fréquence réduite pour préserver les perf.
+
+#### Graphismes & filtres rétros
+- Scanlines/CRT filter, particules additionnelles, variation d’éclairage
+
+#### UI avancée
+- Mini-carte ou radar
+- Options sonores, configuration des touches, sous-titres
+
+#### Tests & équilibre
+- Ajuster spawn rates, scoring, puissances dash/shield
+- Optimisation perf., corrections de bugs
+
+#### Fonctionnalités secondaires
+- Sauvegarde high-scores
+- Écrans de crédits, tutoriels intégrés
 
 💾 **Installation :**
 
