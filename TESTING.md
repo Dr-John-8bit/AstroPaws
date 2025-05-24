@@ -6,12 +6,11 @@ Ce fichier explique comment **tester le jeu AstroPaws** sans connaissance en pro
 
 ## 🍎 Tester sur macOS (Apple Silicon) avec Visual Studio Code
 
-### 1. Installer Python
+### 1. Installer Python 3
 
 - Va sur [https://www.python.org/downloads/macos/](https://www.python.org/downloads/macos/)
-- Télécharge et installe **Python 3.x** via l’installeur `.pkg`
-- Vérifie que Python est installé :  
-  Ouvre le Terminal et tape :
+- Télécharge et installe **Python 3.x** via l’installeur `.pkg` (version universelle recommandée)
+- Ouvre le Terminal et tape pour vérifier :
   ```bash
   python3 --version
   ```
@@ -20,15 +19,14 @@ Ce fichier explique comment **tester le jeu AstroPaws** sans connaissance en pro
 
 - Va sur [https://code.visualstudio.com/](https://code.visualstudio.com/)
 - Télécharge et installe **Visual Studio Code pour Mac**
-
-Ouvre VS Code et installe l’extension **Python** (via l’onglet Extensions à gauche).
+- Ouvre VS Code et installe l’extension **Python** depuis l’onglet Extensions (ou tape `Ctrl+Shift+X` et cherche "Python")
 
 ### 3. Télécharger AstroPaws
 
-- Ouvre Visual Studio Code
-- Menu `Fichier > Ouvrir un dossier…` puis sélectionne un dossier pour y placer le jeu
-- Ouvre le Terminal intégré (`Ctrl + `` ou `Affichage > Terminal`)
-- Copie-colle :
+- Ouvre VS Code
+- Menu `Fichier > Ouvrir un dossier…` et choisis un dossier de travail
+- Ouvre le terminal intégré via `Affichage > Terminal` ou `Ctrl + \``
+- Clone le projet :
   ```bash
   git clone https://github.com/Dr-John-8bit/AstroPaws.git
   cd AstroPaws
@@ -38,17 +36,26 @@ Ouvre VS Code et installe l’extension **Python** (via l’onglet Extensions à
 
 Dans le terminal intégré :
 ```bash
-python3 -m pip install -r requirements.txt
+python3 -m pip install pygame
 ```
+
+Si vous voyez une erreur comme `ModuleNotFoundError: No module named 'pygame'`, cela signifie que cette étape n’a pas été faite correctement.
 
 ### 5. Lancer le jeu
 
-Toujours dans le terminal intégré :
+Deux méthodes sont possibles :
+
+#### 🟢 Depuis le terminal intégré :
 ```bash
 python3 main.py
 ```
 
-Le jeu se lance dans une fenêtre séparée. Utilise les flèches, Espace, `P`, `J`, etc. pour jouer (voir [MANUAL.md](MANUAL.md)).
+#### 🟣 Depuis Visual Studio Code (interactif) :
+- Ouvre le fichier `main.py` dans VS Code
+- Appuie sur `F5` pour lancer en mode exécution
+- Ou clique sur la flèche verte ▶️ en haut à droite de l'éditeur
+
+Le jeu s’ouvre dans une fenêtre dédiée. Utilise les touches fléchées, Espace, `P`, `I`, `J`, etc. (voir [MANUAL.md](MANUAL.md) pour le détail des commandes).
 
 ---
 
