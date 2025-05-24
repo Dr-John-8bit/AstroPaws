@@ -1,44 +1,54 @@
-
-
-
 # 🧪 Guide de test pour AstroPaws
 
 Ce fichier explique comment **tester le jeu AstroPaws** sans connaissance en programmation, sur **macOS (puce Apple Silicon)** et **Ubuntu**.
 
 ---
 
-## 🍎 Tester sur macOS (Apple Silicon)
+## 🍎 Tester sur macOS (Apple Silicon) avec Visual Studio Code
 
-### 1. Installer Python 3
+### 1. Installer Python
 
 - Va sur [https://www.python.org/downloads/macos/](https://www.python.org/downloads/macos/)
-- Télécharge et installe la dernière version de **Python 3.x** (installeur `.pkg`)
-- Vérifie l'installation :  
+- Télécharge et installe **Python 3.x** via l’installeur `.pkg`
+- Vérifie que Python est installé :  
   Ouvre le Terminal et tape :
   ```bash
   python3 --version
   ```
 
-### 2. Télécharger le jeu
+### 2. Installer Visual Studio Code
 
-Dans le Terminal :
-```bash
-git clone https://github.com/Dr-John-8bit/AstroPaws.git
-cd AstroPaws
-```
+- Va sur [https://code.visualstudio.com/](https://code.visualstudio.com/)
+- Télécharge et installe **Visual Studio Code pour Mac**
 
-### 3. Installer les dépendances
+Ouvre VS Code et installe l’extension **Python** (via l’onglet Extensions à gauche).
 
-Toujours dans le Terminal :
+### 3. Télécharger AstroPaws
+
+- Ouvre Visual Studio Code
+- Menu `Fichier > Ouvrir un dossier…` puis sélectionne un dossier pour y placer le jeu
+- Ouvre le Terminal intégré (`Ctrl + `` ou `Affichage > Terminal`)
+- Copie-colle :
+  ```bash
+  git clone https://github.com/Dr-John-8bit/AstroPaws.git
+  cd AstroPaws
+  ```
+
+### 4. Installer les dépendances
+
+Dans le terminal intégré :
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-### 4. Lancer le jeu
+### 5. Lancer le jeu
 
+Toujours dans le terminal intégré :
 ```bash
 python3 main.py
 ```
+
+Le jeu se lance dans une fenêtre séparée. Utilise les flèches, Espace, `P`, `J`, etc. pour jouer (voir [MANUAL.md](MANUAL.md)).
 
 ---
 
