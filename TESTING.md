@@ -98,3 +98,28 @@ Si le jeu ne se lance pas ou que tu rencontres une erreur :
 - Tu peux créer une "Issue" sur GitHub ou contacter Dr John 8bit pour de l’aide.
 
 ---
+# 🔄 Mettre à jour le jeu
+
+Si vous avez déjà téléchargé AstroPaws auparavant, inutile de supprimer tout le dossier. Voici la bonne pratique pour récupérer les dernières nouveautés :
+
+### Méthode recommandée (via Git)
+
+1. Ouvrez le terminal intégré (dans VS Code ou directement sur votre système)
+2. Rendez-vous dans le dossier du jeu :
+   ```bash
+   cd AstroPaws
+   ```
+3. Récupérez les dernières mises à jour depuis le dépôt :
+   ```bash
+   git pull
+   ```
+4. (Facultatif) Si de nouvelles dépendances ont été ajoutées, réinstallez-les :
+   ```bash
+   python3 -m pip install -r requirements.txt
+   ```
+
+🟡 Si vous avez modifié des fichiers localement, pensez à faire une copie de sauvegarde avant d'utiliser `git pull`.
+
+---
+
+Cette méthode fonctionne sur **macOS** et **Ubuntu**, à condition que vous ayez utilisé `git clone` pour télécharger le projet initialement.

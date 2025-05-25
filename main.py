@@ -548,6 +548,10 @@ while running:
         prompt4 = score_font.render("PRESS I FOR INFO", True, WHITE)
         prompt4_rect = prompt4.get_rect(center=(screen_width//2, prompt_y_base + 120))
         screen.blit(prompt4, prompt4_rect)
+        # Affichage de la version (date.build) en bas à droite du menu
+        version_surf = subtitle_font.render("Version 2025-05-25.1", True, WHITE)
+        version_rect = version_surf.get_rect(bottomright=(screen_width - 10, screen_height - 10))
+        screen.blit(version_surf, version_rect)
         pygame.display.flip()
         continue
     # === Écran LEVEL_INTRO ===

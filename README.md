@@ -15,6 +15,7 @@
 - [Installation](#installation)
 - [Création & Musique](#création--musique)
 - [Licence](#licence)
+- [Crédits & Feedbacks](#crédits--feedbacks)
 
 **AstroPaws** est un jeu vidéo rétro inspiré du style Atari 7800.  
 Vous incarnez AstroPaws, un courageux chat astronaute qui explore l’espace pour collecter des croquettes cosmiques et créer la légendaire "pâtée de l’espace".
@@ -120,6 +121,10 @@ Tout le développement est disponible en ligne en toute transparence pour partag
 - Lorsqu’une planète s’approche (< seuil), appliquer une force gravitationnelle simple
 - Limiter aux planètes les plus proches ou à une fréquence réduite pour préserver les perf.
 
+#### Croquettes oxydées
+- À partir du niveau 3, les croquettes laissées trop longtemps deviennent "oxydées".
+- Si elles sont mangées dans cet état, elles retirent des points ou ralentissent AstroPaws.
+
 #### Graphismes & filtres rétros
 - Scanlines/CRT filter, particules additionnelles, variation d’éclairage
 
@@ -147,6 +152,11 @@ git clone https://github.com/Dr-John-8bit/AstroPaws
 
 Ce jeu est développé par Dr John 8bit.
 La bande-son et les bruitages sont faits maison pour une immersion totale dans l’univers d’AstroPaws.
+
+## 📋 Crédits & Feedbacks
+
+- [CREDITS.md](CREDITS.md) : toutes les personnes ayant contribué au jeu ou aidé par leurs idées.
+- [FEEDBACK.md](FEEDBACK.md) : compilation des suggestions reçues durant le développement.
 
 🧩 Licence :
 
